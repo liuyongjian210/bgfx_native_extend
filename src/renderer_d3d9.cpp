@@ -989,6 +989,11 @@ namespace bgfx { namespace d3d9
 			m_initialized = false;
 		}
 
+		void* createTextureFromeSharedRes(TextureHandle _handle, uintptr_t sharedRes)
+		{
+			return 0;//m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
+		}
+
 		RendererType::Enum getRendererType() const override
 		{
 			return RendererType::Direct3D9;

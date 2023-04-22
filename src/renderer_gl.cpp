@@ -3233,6 +3233,11 @@ namespace bgfx { namespace gl
 			unloadRenderDoc(m_renderdocdll);
 		}
 
+		void* createTextureFromeSharedRes(TextureHandle _handle, uintptr_t sharedRes)
+		{
+			return 0;//m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
+		}
+
 		RendererType::Enum getRendererType() const override
 		{
 			if (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGL) )

@@ -1823,6 +1823,11 @@ namespace bgfx { namespace d3d11
 			m_program[_handle.idx].destroy();
 		}
 
+		void* createTextureFromeSharedRes(TextureHandle _handle,uintptr_t sharedRes)
+		{
+			return m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
+		}
+
 		void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip) override
 		{
 			return m_textures[_handle.idx].create(_mem, _flags, _skip);
@@ -3070,9 +3075,22 @@ namespace bgfx { namespace d3d11
 				sd.MinLOD = 0;
 				sd.MaxLOD = D3D11_FLOAT32_MAX;
 
-				DX_CHECK(m_device->CreateSamplerState(&sd, &sampler));
-				DX_CHECK_REFCOUNT(sampler, 1);
 
+				D3D11_SAMPLER_DESC sampDesc;
+				ZeroMemory(&sampDesc, sizeof(sampDesc));
+				sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+				sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+				sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+				sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+				sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+				sampDesc.MinLOD = 0;
+				sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+				//DX_CHECK(m_device->CreateSamplerState(&sampDesc, &sampler));
+
+				DX_CHECK(m_device->CreateSamplerState(&sd, &sampler));
+				
+			    DX_CHECK_REFCOUNT(sampler, 1);
+				
 				m_samplerStateCache.add(hash, sampler);
 			}
 
@@ -4363,6 +4381,56 @@ namespace bgfx { namespace d3d11
 			m_descriptor = NULL;
 			DX_RELEASE(m_ptr, 0);
 		}
+	}
+
+	static void TextureFromShaderResourceView(ID3D11ShaderResourceView* resourceView, ID3D11Texture2D** texture)
+	{
+		ID3D11Resource* resource = NULL;
+		resourceView->GetResource(&resource);
+		resource->Release();  // GetResource() calls AddRef()
+		D3D11_RESOURCE_DIMENSION rType;
+		resource->GetType(&rType);
+		BX_ASSERT(rType == D3D11_RESOURCE_DIMENSION_TEXTURE2D, "ID3D11Resource is not Texture2D，Only 2D support");
+		resource->QueryInterface(texture);
+		(*texture)->Release();  // QueryInterface() calls AddRef()
+	}
+
+	ID3D11Texture2D* TextureD3D11::createFromNative(uintptr_t nativeTex)
+	{
+		ID3D11ShaderResourceView* resourceView = (ID3D11ShaderResourceView*)nativeTex;
+		ID3D11Texture2D* texture = NULL;
+		TextureFromShaderResourceView(resourceView, &texture);
+		m_texture2d = texture;
+		return texture;
+	}
+
+	ID3D11ShaderResourceView* TextureD3D11::createFromNativeSharedRes(uintptr_t nativeSharedRes)
+	{
+		ID3D11Resource* d3dSharedRes = NULL;
+		HRESULT result = s_renderD3D11->m_device->OpenSharedResource((HANDLE)nativeSharedRes, __uuidof(ID3D11Resource),(void**) & d3dSharedRes);
+		if (result != S_OK) {
+			return nullptr;
+		}
+		ID3D11Texture2D* tex2d = nullptr;
+		d3dSharedRes->QueryInterface(__uuidof(ID3D11Texture2D), (void**)(&tex2d));
+		//d3dSharedRes->Release();
+		m_texture2d = tex2d;
+		m_ptr = d3dSharedRes;
+
+		D3D11_TEXTURE2D_DESC tex2d_desc;
+		tex2d->GetDesc(&tex2d_desc);
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
+		bx::memSet(&srvd, 0, sizeof(srvd));
+		srvd.Format = tex2d_desc.Format;
+		srvd.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
+		if (tex2d_desc.SampleDesc.Count > 1)
+			srvd.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DMS;
+		srvd.Texture2D.MostDetailedMip = 0;
+		srvd.Texture2D.MipLevels = 1;
+		DX_CHECK(s_renderD3D11->m_device->CreateShaderResourceView(d3dSharedRes, &srvd, &m_srv));
+		
+		return m_srv;
 	}
 
 	void* TextureD3D11::create(const Memory* _mem, uint64_t _flags, uint8_t _skip)

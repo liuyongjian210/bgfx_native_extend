@@ -84,6 +84,11 @@ namespace bgfx { namespace noop
 			return BGFX_RENDERER_NOOP_NAME;
 		}
 
+		void* createTextureFromeSharedRes(TextureHandle _handle, uintptr_t sharedRes)
+		{
+			return 0;//m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
+		}
+
 		bool isDeviceRemoved() override
 		{
 			return false;

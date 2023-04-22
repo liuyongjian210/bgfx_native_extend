@@ -167,7 +167,7 @@ namespace bgfx
 		void add(uint64_t _key, Ty* _value)
 		{
 			invalidate(_key);
-			m_hashMap.insert(stl::make_pair(_key, _value) );
+			m_hashMap.insert(stl::make_pair(_key, _value) ); 
 			BX_ASSERT(isGraphicsDebuggerPresent()
 				|| 1 == getRefCount(_value), "Interface ref count %d, hash %" PRIx64 "."
 				, getRefCount(_value)

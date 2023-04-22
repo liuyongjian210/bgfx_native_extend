@@ -2741,6 +2741,9 @@ namespace bgfx
 		, TextureFormat::Enum _format
 		);
 
+	TextureHandle createTextureFromeSharedRes(uintptr_t nativeSharedRes);
+
+
 	/// Create texture from memory buffer.
 	///
 	/// @param[in] _mem DDS, KTX or PVR texture data.

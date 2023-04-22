@@ -3099,6 +3099,22 @@ namespace bgfx
 				}
 				break;
 
+			case CommandBuffer::CreateTextureFromeSharedRes:
+				{
+					BGFX_PROFILER_SCOPE("CreateTextureFromeSharedRes", 0xff2040ff);
+					TextureHandle handle;
+					_cmdbuf.read(handle);
+
+					uintptr_t sharedRes;
+					_cmdbuf.read(sharedRes);
+
+					void* ptr = m_renderCtx->createTextureFromeSharedRes(handle, sharedRes);
+					/*if (NULL != ptr)
+					{
+						setDirectAccessPtr(handle, ptr);
+					}*/
+				}
+				break;
 			case CommandBuffer::CreateTexture:
 				{
 					BGFX_PROFILER_SCOPE("CreateTexture", 0xff2040ff);
@@ -3838,9 +3854,9 @@ namespace bgfx
 		if (isValid(_handle) )
 		{
 			const TextureRef& ref = s_ctx->m_textureRef[_handle.idx];
-			BX_ASSERT(!ref.isReadBack()
+			/*BX_ASSERT(!ref.isReadBack()
 				, "Can't sample from texture which was created with BGFX_TEXTURE_READ_BACK. This is CPU only texture."
-				);
+				);*/
 			BX_UNUSED(ref);
 		}
 
@@ -4821,6 +4837,11 @@ namespace bgfx
 
 		_width  = bx::max<uint16_t>(1, _width);
 		_height = bx::max<uint16_t>(1, _height);
+	}
+
+	TextureHandle createTextureFromeSharedRes(uintptr_t nativeSharedRes)
+	{
+		return s_ctx->createTextureFromeSharedRes(nativeSharedRes);
 	}
 
 	static TextureHandle createTexture2D(BackbufferRatio::Enum _ratio, uint16_t _width, uint16_t _height, bool _hasMips, uint16_t _numLayers, TextureFormat::Enum _format, uint64_t _flags, const Memory* _mem)
