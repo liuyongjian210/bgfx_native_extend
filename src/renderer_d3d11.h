@@ -281,6 +281,7 @@ namespace bgfx { namespace d3d11
 			, m_rt(NULL)
 			, m_srv(NULL)
 			, m_uav(NULL)
+			, m_isSharedRes(false)
 			, m_numMips(0)
 		{
 		}
@@ -310,9 +311,10 @@ namespace bgfx { namespace d3d11
 			ID3D11Resource* m_rt;
 			ID3D11Texture2D* m_rt2d;
 		};
-
+		
 		ID3D11ShaderResourceView*  m_srv;
 		ID3D11UnorderedAccessView* m_uav;
+		bool     m_isSharedRes;
 		uint64_t m_flags;
 		uint32_t m_width;
 		uint32_t m_height;

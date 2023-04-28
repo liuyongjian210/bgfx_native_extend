@@ -3233,11 +3233,6 @@ namespace bgfx { namespace gl
 			unloadRenderDoc(m_renderdocdll);
 		}
 
-		void* createTextureFromeSharedRes(TextureHandle _handle, uintptr_t sharedRes)
-		{
-			return 0;//m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
-		}
-
 		RendererType::Enum getRendererType() const override
 		{
 			if (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGL) )
@@ -3364,6 +3359,12 @@ namespace bgfx { namespace gl
 		void destroyProgram(ProgramHandle _handle) override
 		{
 			m_program[_handle.idx].destroy();
+		}
+
+		void* createTextureFromeSharedRes(TextureHandle _handle, uintptr_t sharedRes)
+		{
+			m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
+			return NULL;
 		}
 
 		void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip) override
@@ -5675,6 +5676,12 @@ namespace bgfx { namespace gl
 		}
 
 		return true;
+	}
+
+	void TextureGL::createFromNativeSharedRes(uintptr_t sharedRes)
+	{
+		//EGLDisplay eglDisplayHandle = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+		//EGLImageKHR
 	}
 
 	void TextureGL::create(const Memory* _mem, uint64_t _flags, uint8_t _skip)

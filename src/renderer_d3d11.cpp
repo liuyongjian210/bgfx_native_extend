@@ -4397,11 +4397,25 @@ namespace bgfx { namespace d3d11
 
 	ID3D11Texture2D* TextureD3D11::createFromNative(uintptr_t nativeTex)
 	{
-		ID3D11ShaderResourceView* resourceView = (ID3D11ShaderResourceView*)nativeTex;
-		ID3D11Texture2D* texture = NULL;
-		TextureFromShaderResourceView(resourceView, &texture);
-		m_texture2d = texture;
-		return texture;
+		ID3D11Texture2D* tex2d = (ID3D11Texture2D*)nativeTex;
+		if (tex2d == nullptr)
+		{
+			return nullptr;
+		}
+		D3D11_TEXTURE2D_DESC tex2d_desc;
+		tex2d->GetDesc(&tex2d_desc);
+		m_texture2d = tex2d;
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
+		bx::memSet(&srvd, 0, sizeof(srvd));
+		srvd.Format = tex2d_desc.Format;
+		srvd.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
+		if (tex2d_desc.SampleDesc.Count > 1)
+			srvd.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DMS;
+		srvd.Texture2D.MostDetailedMip = 0;
+		srvd.Texture2D.MipLevels = 1;
+		DX_CHECK(s_renderD3D11->m_device->CreateShaderResourceView(tex2d, &srvd, &m_srv));
+		return m_texture2d;
 	}
 
 	ID3D11ShaderResourceView* TextureD3D11::createFromNativeSharedRes(uintptr_t nativeSharedRes)
@@ -4413,9 +4427,8 @@ namespace bgfx { namespace d3d11
 		}
 		ID3D11Texture2D* tex2d = nullptr;
 		d3dSharedRes->QueryInterface(__uuidof(ID3D11Texture2D), (void**)(&tex2d));
-		//d3dSharedRes->Release();
 		m_texture2d = tex2d;
-		m_ptr = d3dSharedRes;
+		tex2d->Release();
 
 		D3D11_TEXTURE2D_DESC tex2d_desc;
 		tex2d->GetDesc(&tex2d_desc);
@@ -4429,7 +4442,7 @@ namespace bgfx { namespace d3d11
 		srvd.Texture2D.MostDetailedMip = 0;
 		srvd.Texture2D.MipLevels = 1;
 		DX_CHECK(s_renderD3D11->m_device->CreateShaderResourceView(d3dSharedRes, &srvd, &m_srv));
-		
+		m_isSharedRes = true;
 		return m_srv;
 	}
 
@@ -4799,7 +4812,7 @@ namespace bgfx { namespace d3d11
 		DX_RELEASE(m_rt, 0);
 		DX_RELEASE(m_srv, 0);
 		DX_RELEASE(m_uav, 0);
-		if (0 == (m_flags & BGFX_SAMPLER_INTERNAL_SHARED) )
+		if (0 == (m_flags & BGFX_SAMPLER_INTERNAL_SHARED))
 		{
 			DX_RELEASE(m_ptr, 0);
 		}

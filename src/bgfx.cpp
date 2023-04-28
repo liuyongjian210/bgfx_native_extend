@@ -3108,11 +3108,7 @@ namespace bgfx
 					uintptr_t sharedRes;
 					_cmdbuf.read(sharedRes);
 
-					void* ptr = m_renderCtx->createTextureFromeSharedRes(handle, sharedRes);
-					/*if (NULL != ptr)
-					{
-						setDirectAccessPtr(handle, ptr);
-					}*/
+					m_renderCtx->createTextureFromeSharedRes(handle, sharedRes);
 				}
 				break;
 			case CommandBuffer::CreateTexture:
