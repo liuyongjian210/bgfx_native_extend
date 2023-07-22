@@ -1736,6 +1736,11 @@ namespace bgfx { namespace d3d11
 			return RendererType::Direct3D11;
 		}
 
+		void* getRendererDevice() const override
+		{
+			return m_device;
+		}
+
 		const char* getRendererName() const override
 		{
 			return BGFX_RENDERER_DIRECT3D11_NAME;

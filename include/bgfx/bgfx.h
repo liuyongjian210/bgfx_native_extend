@@ -2083,6 +2083,16 @@ namespace bgfx
 	///
 	RendererType::Enum getRendererType();
 
+	/// Returns current renderer backend API device.
+	///
+	/// @remarks
+	///   Library must be initialized.
+	///
+	/// @attention C99's equivalent binding is `bgfx_get_renderer_device`.
+	///
+	void* getRendererDevice();
+
+
 	/// Returns renderer capabilities.
 	///
 	/// @returns Pointer to static `bgfx::Caps` structure.

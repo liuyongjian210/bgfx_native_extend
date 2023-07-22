@@ -4075,6 +4075,14 @@ namespace bgfx
 		return g_caps.rendererType;
 	}
 
+	void* getRendererDevice()
+	{
+		if (!s_ctx || !s_ctx->m_renderCtx) {
+			return NULL;
+		}
+		return s_ctx->m_renderCtx->getRendererDevice();
+	}
+
 	const Memory* alloc(uint32_t _size)
 	{
 		BX_ASSERT(0 < _size, "Invalid memory operation. _size is 0.");

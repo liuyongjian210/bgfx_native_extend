@@ -2169,6 +2169,11 @@ VK_IMPORT_DEVICE
 			return RendererType::Vulkan;
 		}
 
+		void* getRendererDevice() const override
+		{
+			return m_device;
+		}
+
 		const char* getRendererName() const override
 		{
 			return BGFX_RENDERER_VULKAN_NAME;

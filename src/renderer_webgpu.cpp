@@ -755,6 +755,11 @@ namespace bgfx { namespace webgpu
 			return RendererType::WebGPU;
 		}
 
+		void* getRendererDevice() const override
+		{
+			return m_device;
+		}
+
 		const char* getRendererName() const override
 		{
 			return BGFX_RENDERER_WEBGPU_NAME;

@@ -999,6 +999,11 @@ namespace bgfx { namespace d3d9
 			return RendererType::Direct3D9;
 		}
 
+		void* getRendererDevice() const override
+		{
+			return m_device;
+		}
+
 		const char* getRendererName() const override
 		{
 			if (NULL != m_d3d9ex)

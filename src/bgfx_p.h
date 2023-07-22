@@ -3058,6 +3058,7 @@ namespace bgfx
 	{
 		virtual ~RendererContextI() = 0;
 		virtual RendererType::Enum getRendererType() const = 0;
+		virtual void* getRendererDevice() const = 0;
 		virtual const char* getRendererName() const = 0;
 		virtual bool isDeviceRemoved() = 0;
 		virtual void flip() = 0;

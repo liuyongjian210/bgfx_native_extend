@@ -3243,6 +3243,11 @@ namespace bgfx { namespace gl
 			return RendererType::OpenGLES;
 		}
 
+		void* getRendererDevice() const override
+		{
+			return 0;
+		}
+
 		const char* getRendererName() const override
 		{
 			return BGFX_RENDERER_OPENGL_NAME;
