@@ -1882,7 +1882,7 @@ namespace bgfx { namespace d3d11
 		void resizeTexture(TextureHandle _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, uint16_t _numLayers) override
 		{
 			TextureD3D11& texture = m_textures[_handle.idx];
-
+			
 			uint32_t size = sizeof(uint32_t) + sizeof(TextureCreate);
 			const Memory* mem = alloc(size);
 

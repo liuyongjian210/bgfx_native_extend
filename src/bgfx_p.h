@@ -3227,7 +3227,7 @@ namespace bgfx
 			{
 				uint16_t textureIdx = m_textureHandle.getHandleAt(ii);
 				const TextureRef& ref = m_textureRef[textureIdx];
-				if (BackbufferRatio::Count != ref.m_bbRatio)
+				if (ref.m_refCount > 0 && BackbufferRatio::Count != ref.m_bbRatio)
 				{
 					TextureHandle handle = { textureIdx };
 					resizeTexture(handle
@@ -4560,6 +4560,22 @@ namespace bgfx
 			BGFX_MUTEX_SCOPE(m_resourceApiLock);
 
 			TextureHandle handle = { m_textureHandle.alloc() };
+
+			/*TextureRef& ref = m_textureRef[handle.idx];
+			ref.init(
+				BackbufferRatio::Enum::Count
+				, uint16_t(0)
+				, uint16_t(0)
+				, uint16_t(0)
+				, TextureFormat::Enum::Unknown
+				, 0
+				, 0
+				, 0
+				, 0
+				, 0
+				, 0
+				, 0
+			);*/
 
 			CommandBuffer& cmdbuf = getCommandBuffer(CommandBuffer::CreateTextureFromeSharedRes);
 			cmdbuf.write(handle);
