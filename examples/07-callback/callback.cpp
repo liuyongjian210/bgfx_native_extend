@@ -224,7 +224,10 @@ struct BgfxCallback : public bgfx::CallbackI
 			m_writer->frame(_data);
 		}
 	}
+	virtual void onTextureOpenCallback(bgfx::TextureHandle handle, const uint16_t width, const uint16_t heigt) override
+	{
 
+	}
 	AviWriter* m_writer;
 };
 

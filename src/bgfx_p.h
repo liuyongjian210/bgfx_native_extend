@@ -4561,13 +4561,13 @@ namespace bgfx
 
 			TextureHandle handle = { m_textureHandle.alloc() };
 
-			/*TextureRef& ref = m_textureRef[handle.idx];
+			TextureRef& ref = m_textureRef[handle.idx];
 			ref.init(
 				BackbufferRatio::Enum::Count
-				, uint16_t(0)
-				, uint16_t(0)
-				, uint16_t(0)
-				, TextureFormat::Enum::Unknown
+				, uint16_t(1)
+				, uint16_t(1)
+				, uint16_t(1)
+				, TextureFormat::Enum::RGBA32F
 				, 0
 				, 0
 				, 0
@@ -4575,7 +4575,7 @@ namespace bgfx
 				, 0
 				, 0
 				, 0
-			);*/
+			);
 
 			CommandBuffer& cmdbuf = getCommandBuffer(CommandBuffer::CreateTextureFromeSharedRes);
 			cmdbuf.write(handle);

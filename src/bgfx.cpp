@@ -160,6 +160,11 @@ namespace bgfx
 		virtual void captureFrame(const void* /*_data*/, uint32_t /*_size*/) override
 		{
 		}
+
+		virtual void onTextureOpenCallback(bgfx::TextureHandle handle, const uint16_t width, const uint16_t heigt) override
+		{
+			
+		}
 	};
 
 #ifndef BGFX_CONFIG_MEMORY_TRACKING
@@ -3107,7 +3112,7 @@ namespace bgfx
 
 					uintptr_t sharedRes;
 					_cmdbuf.read(sharedRes);
-
+					
 					m_renderCtx->createTextureFromeSharedRes(handle, sharedRes);
 				}
 				break;
@@ -5899,6 +5904,10 @@ namespace bgfx
 		virtual void captureFrame(const void* _data, uint32_t _size) override
 		{
 			m_interface->vtbl->capture_frame(m_interface, _data, _size);
+		}
+
+		virtual void onTextureOpenCallback(bgfx::TextureHandle handle, const uint16_t width, const uint16_t heigt) override
+		{
 		}
 
 		bgfx_callback_interface_t* m_interface;

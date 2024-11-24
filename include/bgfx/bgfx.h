@@ -608,6 +608,12 @@ namespace bgfx
 		/// @attention C99's equivalent binding is `bgfx_callback_vtbl.capture_frame`.
 		///
 		virtual void captureFrame(const void* _data, uint32_t _size) = 0;
+
+		/// <summary>
+		/// open texture callback
+		/// </summary>
+		virtual void onTextureOpenCallback(bgfx::TextureHandle handle, const uint16_t width, const uint16_t heigt) = 0;
+
 	};
 
 	inline CallbackI::~CallbackI()
@@ -2750,7 +2756,6 @@ namespace bgfx
 		, uint16_t _numLayers
 		, TextureFormat::Enum _format
 		);
-
 	TextureHandle createTextureFromeSharedRes(uintptr_t nativeSharedRes);
 
 

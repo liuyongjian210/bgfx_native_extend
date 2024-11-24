@@ -1830,7 +1830,27 @@ namespace bgfx { namespace d3d11
 
 		void* createTextureFromeSharedRes(TextureHandle _handle,uintptr_t sharedRes)
 		{
-			return m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
+			ID3D11ShaderResourceView* srv = m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
+			if (srv)
+			{
+				ID3D11Resource* textureResource = nullptr;
+				srv->GetResource(&textureResource);
+
+				if (textureResource)
+				{
+					ID3D11Texture2D* texture = nullptr;
+					HRESULT hr = textureResource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&texture));
+
+					if (texture)
+					{
+						D3D11_TEXTURE2D_DESC tex2d_desc;
+						texture->GetDesc(&tex2d_desc);
+
+						g_callback->onTextureOpenCallback(_handle, tex2d_desc.Width, tex2d_desc.Height);
+					}
+				}
+			}
+			return srv;
 		}
 
 		void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip) override
