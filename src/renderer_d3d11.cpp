@@ -1845,9 +1845,11 @@ namespace bgfx { namespace d3d11
 					{
 						D3D11_TEXTURE2D_DESC tex2d_desc;
 						texture->GetDesc(&tex2d_desc);
+						texture->Release();
 
 						g_callback->onTextureOpenCallback(_handle, tex2d_desc.Width, tex2d_desc.Height);
 					}
+					textureResource->Release();
 				}
 			}
 			return srv;
