@@ -2757,8 +2757,8 @@ namespace bgfx
 		, TextureFormat::Enum _format
 		);
 	TextureHandle createTextureFromeSharedRes(uintptr_t nativeSharedRes);
-
-
+	void postFenceSignal(uintptr_t fence, uint32_t value);
+	void postSemaphore(const char* name, uint32_t value);
 	/// Create texture from memory buffer.
 	///
 	/// @param[in] _mem DDS, KTX or PVR texture data.

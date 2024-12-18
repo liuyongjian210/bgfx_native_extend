@@ -909,6 +909,8 @@ namespace bgfx
 			CreateProgram,
 			CreateTexture,
 			CreateTextureFromeSharedRes,
+			PostFence,
+			PostSem,
 			UpdateTexture,
 			ResizeTexture,
 			CreateFrameBuffer,
@@ -3079,6 +3081,8 @@ namespace bgfx
 		virtual void createProgram(ProgramHandle _handle, ShaderHandle _vsh, ShaderHandle _fsh) = 0;
 		virtual void destroyProgram(ProgramHandle _handle) = 0;
 		virtual void* createTextureFromeSharedRes(TextureHandle _handle,uintptr_t sharedRes) = 0;
+		virtual void postFenceSignal(uintptr_t fence, uint32_t value) = 0;
+		virtual void postSemaphore(const char* fence, uint32_t value) = 0;
 		virtual void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip) = 0;
 		virtual void updateTextureBegin(TextureHandle _handle, uint8_t _side, uint8_t _mip) = 0;
 		virtual void updateTexture(TextureHandle _handle, uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem) = 0;
@@ -4582,6 +4586,24 @@ namespace bgfx
 			cmdbuf.write(nativeSharedRes);
 
 			return handle;
+		}
+
+		BGFX_API_FUNC(void postFenceSignal(uintptr_t fence, uint32_t value))
+		{
+			BGFX_MUTEX_SCOPE(m_resourceApiLock);
+
+			CommandBuffer& cmdbuf = getCommandBuffer(CommandBuffer::PostFence);
+			cmdbuf.write(fence);
+			cmdbuf.write(value);
+		}
+
+		BGFX_API_FUNC(void postSemaphore(const char* name, uint32_t value))
+		{
+			BGFX_MUTEX_SCOPE(m_resourceApiLock);
+
+			CommandBuffer& cmdbuf = getCommandBuffer(CommandBuffer::PostSem);
+			cmdbuf.write(name);
+			cmdbuf.write(value);
 		}
 
 		BGFX_API_FUNC(void setName(TextureHandle _handle, const bx::StringView& _name) )

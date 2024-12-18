@@ -994,6 +994,17 @@ namespace bgfx { namespace d3d9
 			return 0;//m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
 		}
 
+		void postFenceSignal(uintptr_t fence, uint32_t value)
+		{
+		}
+		void postSemaphore(const char* fence, uint32_t value)
+		{
+			HANDLE sem = OpenSemaphore(SEMAPHORE_ALL_ACCESS, false, fence);
+			if (sem)
+			{
+				ReleaseSemaphore(sem, 1, NULL);
+			}
+		}
 		RendererType::Enum getRendererType() const override
 		{
 			return RendererType::Direct3D9;

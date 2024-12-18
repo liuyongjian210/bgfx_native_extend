@@ -3116,6 +3116,30 @@ namespace bgfx
 					m_renderCtx->createTextureFromeSharedRes(handle, sharedRes);
 				}
 				break;
+			case CommandBuffer::PostFence:
+			{
+				BGFX_PROFILER_SCOPE("PostFence", 0xff2040ff);				
+				uintptr_t fencePtr;
+				_cmdbuf.read(fencePtr);
+
+				uint32_t value;
+				_cmdbuf.read(value);
+
+				m_renderCtx->postFenceSignal(fencePtr, value);
+			}
+			break;
+			case CommandBuffer::PostSem:
+			{
+				BGFX_PROFILER_SCOPE("PostSem", 0xff2040ff);
+				char* name;
+				_cmdbuf.read(name);
+
+				uint32_t value;
+				_cmdbuf.read(value);
+
+				m_renderCtx->postSemaphore(name, value);
+			}
+			break;
 			case CommandBuffer::CreateTexture:
 				{
 					BGFX_PROFILER_SCOPE("CreateTexture", 0xff2040ff);
@@ -4851,6 +4875,16 @@ namespace bgfx
 	TextureHandle createTextureFromeSharedRes(uintptr_t nativeSharedRes)
 	{
 		return s_ctx->createTextureFromeSharedRes(nativeSharedRes);
+	}
+
+	void postFenceSignal(uintptr_t fence, uint32_t value)
+	{
+		return s_ctx->postFenceSignal(fence,value);
+	}
+
+	void postSemaphore(const char* name, uint32_t value)
+	{
+		return s_ctx->postSemaphore(name, value);
 	}
 
 	static TextureHandle createTexture2D(BackbufferRatio::Enum _ratio, uint16_t _width, uint16_t _height, bool _hasMips, uint16_t _numLayers, TextureFormat::Enum _format, uint64_t _flags, const Memory* _mem)

@@ -3372,6 +3372,17 @@ namespace bgfx { namespace gl
 			return NULL;
 		}
 
+		void postFenceSignal(uintptr_t fence, uint32_t value)
+		{
+		}
+		void postSemaphore(const char* fence, uint32_t value)
+		{
+			HANDLE sem = OpenSemaphore(SEMAPHORE_ALL_ACCESS, false, fence);
+			if (sem)
+			{
+				ReleaseSemaphore(sem, 1, NULL);
+			}
+		}
 		void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip) override
 		{
 			m_textures[_handle.idx].create(_mem, _flags, _skip);

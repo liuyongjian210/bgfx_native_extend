@@ -25,6 +25,11 @@ BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4005) // warning C4005: '' : macro redefinitio
 #define D3D11_NO_HELPERS
 #if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS
 #   include <d3d11_3.h>
+#   include <dxgi1_5.h>
+#include <d3d11_4.h>
+#include <dxgi1_5.h>
+#include <dxgi1_2.h>
+
 #elif BX_PLATFORM_WINRT
 #   define __D3D10_1SHADER_H__ // BK - not used keep quiet!
 #   include <d3d11_3.h>

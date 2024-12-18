@@ -1855,6 +1855,38 @@ namespace bgfx { namespace d3d11
 			return srv;
 		}
 
+		void postFenceSignal(uintptr_t fence, uint32_t value)
+		{
+			ID3D11Device5* device5 = nullptr;			
+			HRESULT ret = m_device->QueryInterface(__uuidof(ID3D11Device5), (void**)&device5);
+			ID3D11DeviceContext4* ctx4 = nullptr;
+			// 检查并转换为 ID3D11DeviceContext4
+			if (SUCCEEDED(m_device->QueryInterface(__uuidof(ID3D11DeviceContext4), (void**)&ctx4))) {
+				ID3D11Fence* fence_ptr = nullptr;
+				device5->OpenSharedResource((HANDLE)fence, __uuidof(ID3D11Fence), reinterpret_cast<void**>(&fence_ptr));
+				// 支持 ID3D11DeviceContext4，可以使用其方法
+				if (fence_ptr)
+				{
+					ctx4->Signal(fence_ptr, 1);
+					fence_ptr->Release();
+				}
+			}
+			else {
+				// 不支持 ID3D11DeviceContext4，可能需要回退到早期版本的接口
+				return;
+			}
+		}
+
+		void postSemaphore(const char* fence, uint32_t value)
+		{
+			HANDLE sem = OpenSemaphore(SEMAPHORE_ALL_ACCESS,false,fence);
+			if (sem)
+			{
+				ReleaseSemaphore(sem, 1, NULL);
+				CloseHandle(sem);
+			}
+		}
+
 		void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip) override
 		{
 			return m_textures[_handle.idx].create(_mem, _flags, _skip);

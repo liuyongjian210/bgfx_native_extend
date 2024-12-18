@@ -94,6 +94,13 @@ namespace bgfx { namespace noop
 			return 0;//m_textures[_handle.idx].createFromNativeSharedRes(sharedRes);
 		}
 
+		void postFenceSignal(uintptr_t fence, uint32_t value)
+		{
+		}
+		void postSemaphore(const char* fence, uint32_t value)
+		{
+			
+		}
 		bool isDeviceRemoved() override
 		{
 			return false;
