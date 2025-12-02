@@ -84,7 +84,7 @@ Pass::Status LICMPass::AnalyseAndHoistFromBB(
   bool modified = false;
   std::function<bool(Instruction*)> hoist_inst =
       [this, &loop, &modified](Instruction* inst) {
-        if (loop->ShouldHoistInstruction(this->context(), inst)) {
+        if (loop->ShouldHoistInstruction(*inst)) {
           if (!HoistInstruction(loop, inst)) {
             return false;
           }
@@ -118,7 +118,6 @@ bool LICMPass::IsImmediatelyContainedInLoop(Loop* loop, Function* f,
 }
 
 bool LICMPass::HoistInstruction(Loop* loop, Instruction* inst) {
-  // TODO(1841): Handle failure to create pre-header.
   BasicBlock* pre_header_bb = loop->GetOrCreatePreHeaderBlock();
   if (!pre_header_bb) {
     return false;

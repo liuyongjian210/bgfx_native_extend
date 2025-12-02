@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -34,9 +34,8 @@ namespace entry
 	extern bx::AllocatorI* getDefaultAllocator();
 	bx::AllocatorI* g_allocator = getDefaultAllocator();
 
-	typedef bx::StringT<&g_allocator> String;
-
-	static String s_currentDir;
+	using FixedString4096 = bx::FixedStringT<4096>;
+	static FixedString4096 s_currentDir;
 
 	class FileReader : public bx::FileReader
 	{
@@ -45,9 +44,10 @@ namespace entry
 	public:
 		virtual bool open(const bx::FilePath& _filePath, bx::Error* _err) override
 		{
-			String filePath(s_currentDir);
+			FixedString4096 filePath(s_currentDir);
 			filePath.append(_filePath);
-			return super::open(filePath.getPtr(), _err);
+
+			return super::open(filePath.getCPtr(), _err);
 		}
 	};
 
@@ -58,9 +58,9 @@ namespace entry
 	public:
 		virtual bool open(const bx::FilePath& _filePath, bool _append, bx::Error* _err) override
 		{
-			String filePath(s_currentDir);
-			filePath.append(_filePath);
-			return super::open(filePath.getPtr(), _append, _err);
+			bx::FilePath filePath(s_currentDir);
+			filePath.join(_filePath);
+			return super::open(filePath.getCPtr(), _append, _err);
 		}
 	};
 
@@ -185,7 +185,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 		"GamepadStart",
 		"GamepadGuide",
 	};
-	BX_STATIC_ASSERT(Key::Count == BX_COUNTOF(s_keyName) );
+	static_assert(Key::Count == BX_COUNTOF(s_keyName) );
 
 	const char* getName(Key::Enum _key)
 	{
@@ -455,7 +455,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 
 	AppI::AppI(const char* _name, const char* _description, const char* _url)
 	{
-		BX_STATIC_ASSERT(sizeof(AppInternal) <= sizeof(m_internal) );
+		static_assert(sizeof(AppInternal) <= sizeof(m_internal) );
 		s_offset = BX_OFFSETOF(AppI, m_internal);
 
 		AppInternal* ai = (AppInternal*)m_internal;
@@ -566,7 +566,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 			return;
 		}
 
-		AppI** apps = (AppI**)BX_ALLOC(g_allocator, s_numApps*sizeof(AppI*) );
+		AppI** apps = (AppI**)bx::alloc(g_allocator, s_numApps*sizeof(AppI*) );
 
 		uint32_t ii = 0;
 		for (AppI* app = getFirstApp(); NULL != app; app = app->getNext() )
@@ -589,12 +589,13 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 			ai->m_next = NULL;
 		}
 
-		BX_FREE(g_allocator, apps);
+		bx::free(g_allocator, apps);
 	}
 
 	int main(int _argc, const char* const* _argv)
 	{
 		//DBG(BX_COMPILER_NAME " / " BX_CPU_NAME " / " BX_ARCH_NAME " / " BX_PLATFORM_NAME);
+		bx::installExceptionHandler();
 
 		s_fileReader = BX_NEW(g_allocator, FileReader);
 		s_fileWriter = BX_NEW(g_allocator, FileWriter);
@@ -666,10 +667,10 @@ restart:
 
 		cmdShutdown();
 
-		BX_DELETE(g_allocator, s_fileReader);
+		bx::deleteObject(g_allocator, s_fileReader);
 		s_fileReader = NULL;
 
-		BX_DELETE(g_allocator, s_fileWriter);
+		bx::deleteObject(g_allocator, s_fileWriter);
 		s_fileWriter = NULL;
 
 		return result;
@@ -767,6 +768,7 @@ restart:
 						handle  = size->m_handle;
 						_width  = size->m_width;
 						_height = size->m_height;
+						BX_TRACE("Window resize event: %d: %dx%d", handle, _width, _height);
 
 						needReset = true;
 					}
@@ -800,6 +802,7 @@ restart:
 		&&  needReset)
 		{
 			_reset = s_reset;
+			BX_TRACE("bgfx::reset(%d, %d, 0x%x)", _width, _height, _reset);
 			bgfx::reset(_width, _height, _reset);
 			inputSetMouseResolution(uint16_t(_width), uint16_t(_height) );
 		}
@@ -850,7 +853,7 @@ restart:
 			if (NULL != ev)
 			{
 				handle = ev->m_handle;
-				WindowState& win = s_window[handle.idx];
+				WindowState& win = s_window[isValid(handle) ? handle.idx : 0];
 
 				switch (ev->m_type)
 				{
@@ -979,6 +982,7 @@ restart:
 		if (needReset)
 		{
 			_reset = s_reset;
+			BX_TRACE("bgfx::reset(%d, %d, 0x%x)", s_window[0].m_width, s_window[0].m_height, _reset);
 			bgfx::reset(s_window[0].m_width, s_window[0].m_height, _reset);
 			inputSetMouseResolution(uint16_t(s_window[0].m_width), uint16_t(s_window[0].m_height) );
 		}
@@ -1010,14 +1014,14 @@ restart:
 
 	void* TinyStlAllocator::static_allocate(size_t _bytes)
 	{
-		return BX_ALLOC(getAllocator(), _bytes);
+		return bx::alloc(getAllocator(), _bytes);
 	}
 
 	void TinyStlAllocator::static_deallocate(void* _ptr, size_t /*_bytes*/)
 	{
 		if (NULL != _ptr)
 		{
-			BX_FREE(getAllocator(), _ptr);
+			bx::free(getAllocator(), _ptr);
 		}
 	}
 
@@ -1036,4 +1040,9 @@ extern "C" void* entry_get_default_native_window_handle()
 extern "C" void* entry_get_native_display_handle()
 {
 	return entry::getNativeDisplayHandle();
+}
+
+extern "C" bgfx::NativeWindowHandleType::Enum entry_get_native_window_handle_type()
+{
+	return entry::getNativeWindowHandleType();
 }

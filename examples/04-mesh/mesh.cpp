@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -32,6 +32,7 @@ public:
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
+		init.platformData.type = entry::getNativeWindowHandleType();
 		init.resolution.width  = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
@@ -48,7 +49,7 @@ public:
 				, 0
 				);
 
-		u_time = bgfx::createUniform("u_time", bgfx::UniformType::Vec4);
+		u_time = bgfx::createUniform("u_time", bgfx::UniformFreq::Frame, bgfx::UniformType::Vec4);
 
 		// Create program from shaders.
 		m_program = loadProgram("vs_mesh", "fs_mesh");
@@ -103,7 +104,7 @@ public:
 			bgfx::touch(0);
 
 			float time = (float)( (bx::getHPCounter()-m_timeOffset)/double(bx::getHPFrequency() ) );
-			bgfx::setUniform(u_time, &time);
+			bgfx::setFrameUniform(u_time, &time);
 
 			const bx::Vec3 at  = { 0.0f, 1.0f,  0.0f };
 			const bx::Vec3 eye = { 0.0f, 1.0f, -2.5f };
