@@ -16,6 +16,8 @@
 
 namespace bgfx
 {
+	typedef struct Context;
+
 	/// Render frame enum.
 	///
 	/// @attention C99's equivalent binding is `bgfx_render_frame_t`.
@@ -50,7 +52,7 @@ namespace bgfx
 	///
 	/// @attention C99's equivalent binding is `bgfx_render_frame`.
 	///
-	RenderFrame::Enum renderFrame(int32_t _msecs = -1);
+	RenderFrame::Enum renderFrame(int32_t _msecs = -1,Context* _ctx = nullptr);
 
 	/// Set platform data.
 	///

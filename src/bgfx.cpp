@@ -30,6 +30,7 @@ BX_ERROR_RESULT(BGFX_ERROR_IDENTIFIER_VALIDATION,   BX_MAKEFOURCC('b', 'g', 0, 3
 
 namespace bgfx
 {
+
 #define BGFX_API_THREAD_MAGIC UINT32_C(0x78666762)
 
 #if BGFX_CONFIG_MULTITHREADED
@@ -1531,7 +1532,7 @@ namespace bgfx
 		m_uniformCacheFrame.sort(viewRemap, s_ctx->m_tempKeys);
 	}
 
-	RenderFrame::Enum renderFrame(int32_t _msecs)
+	RenderFrame::Enum renderFrame(int32_t _msecs, Context* _ctx)
 	{
 		if (BX_ENABLED(BGFX_CONFIG_MULTITHREADED) )
 		{
@@ -1540,7 +1541,12 @@ namespace bgfx
 				BGFX_CHECK_RENDER_THREAD();
 			}
 
-			if (NULL == s_ctx)
+			if (_ctx == NULL)
+			{
+				_ctx = s_ctx;
+			}
+
+			if (NULL == s_ctx && _ctx== NULL)
 			{
 				s_renderFrameCalled = true;
 				s_threadIndex = ~BGFX_API_THREAD_MAGIC;
@@ -1551,10 +1557,10 @@ namespace bgfx
 				? BGFX_CONFIG_API_SEMAPHORE_TIMEOUT
 				: _msecs
 				;
-			RenderFrame::Enum result = s_ctx->renderFrame(msecs);
+			RenderFrame::Enum result = _ctx->renderFrame(msecs);
 			if (RenderFrame::Exiting == result)
 			{
-				Context* ctx = s_ctx;
+				Context* ctx = _ctx;
 				ctx->apiSemWait();
 				s_ctx = NULL;
 				ctx->renderSemPost();
@@ -2495,11 +2501,19 @@ namespace bgfx
 	///
 	void rendererDestroy(RendererContextI* _renderCtx);
 
+	void Context::wait_group_flip(int32_t _group)
+	{
+
+	}
+
 	void Context::flip()
 	{
 		if (m_rendererInitialized
 		&& !m_flipped)
 		{
+			//wait group flip
+			wait_group_flip(m_flip_group);
+
 			m_renderCtx->flip();
 			m_flipped = true;
 
@@ -6190,6 +6204,20 @@ namespace bgfx
 
 		bgfx_allocator_interface_t* m_interface;
 	};
+
+	/// <summary>
+	/// metamp
+	/// </summary>
+	/// <param name="ctx"></param>
+	void SetCurrentContext(Context* ctx)
+	{
+		s_ctx = ctx;
+	}
+
+	Context* GetCurrentContext()
+	{
+		return s_ctx;
+	}
 
 } // namespace bgfx
 

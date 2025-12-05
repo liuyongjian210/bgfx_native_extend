@@ -7,7 +7,6 @@
 #define BGFX_P_H_HEADER_GUARD
 
 #include <bx/platform.h>
-
 #ifndef BX_CONFIG_DEBUG
 #	error "BX_CONFIG_DEBUG must be defined in build script!"
 #endif // BX_CONFIG_DEBUG
@@ -3606,6 +3605,13 @@ namespace bgfx
 #else
 #	define BGFX_API_FUNC(_func) _func
 #endif // BGFX_CONFIG_DEBUG
+	struct Context;
+	/// <summary>
+	/// metamp
+	/// </summary>
+	/// <param name="ctx"></param>
+	void SetCurrentContext(Context* ctx);
+	Context* GetCurrentContext();
 
 	struct Context
 	{
@@ -3619,6 +3625,7 @@ namespace bgfx
 			, m_numFreeOcclusionQueryHandles(0)
 			, m_colorPaletteDirty(2)
 			, m_frames(0)
+			, m_flip_group(0)
 			, m_debug(BGFX_DEBUG_NONE)
 			, m_rtMemoryUsed(0)
 			, m_textureMemoryUsed(0)
@@ -3636,11 +3643,28 @@ namespace bgfx
 		}
 
 #if BX_CONFIG_SUPPORTS_THREADING
-		static int32_t renderThread(bx::Thread* /*_self*/, void* /*_userData*/)
+		static int32_t renderThread(bx::Thread* /*_self*/, void* _userData/*_userData*/)
 		{
 			BX_TRACE("render thread start");
 			BGFX_PROFILER_SET_CURRENT_THREAD_NAME("bgfx - Render Thread");
-			while (RenderFrame::Exiting != bgfx::renderFrame() ) {};
+
+			RenderFrame::Enum result = RenderFrame::Enum::NoContext;
+			while (RenderFrame::Exiting != result)
+			{
+				if (_userData)
+				{
+					Context* ctx = (Context*)_userData;
+					SetCurrentContext(ctx);
+					result = bgfx::renderFrame(30, ctx);
+					BX_TRACE("render thread renderFrame by ctx");
+				}
+				else
+				{
+					result = bgfx::renderFrame(30);
+					BX_TRACE("render thread renderFrame");
+				}
+			}
+
 			BX_TRACE("render thread exit");
 			return bx::kExitSuccess;
 		}
@@ -3648,7 +3672,13 @@ namespace bgfx
 
 		// game thread
 		bool init(const Init& _init);
+		
 		void shutdown();
+
+		bool getRenderFrameCalled()
+		{
+			return m_renderFrameCalled;
+		}
 
 		CommandBuffer& getCommandBuffer(CommandBuffer::Enum _cmd)
 		{
@@ -5748,6 +5778,12 @@ namespace bgfx
 
 		// render thread
 		void flip();
+
+		/// <summary>
+		/// Metamp 
+		/// </summary>
+		void wait_group_flip(int32_t _group);
+
 		RenderFrame::Enum renderFrame(int32_t _msecs = -1);
 		void flushTextureUpdateBatch(CommandBuffer& _cmdbuf);
 		void rendererExecCommands(CommandBuffer& _cmdbuf);
@@ -5864,6 +5900,11 @@ namespace bgfx
 		uint32_t      m_numEncoders;
 		bx::HandleAlloc* m_encoderHandle;
 
+		/// <summary>
+		/// Metamp
+		/// </summary>
+		bool m_renderFrameCalled = false;
+
 		Frame  m_frame[1+(BGFX_CONFIG_MULTITHREADED ? 1 : 0)];
 		Frame* m_render;
 		Frame* m_submit;
@@ -5930,6 +5971,8 @@ namespace bgfx
 		int64_t  m_frameTimeLast;
 		uint32_t m_frames;
 		uint32_t m_debug;
+
+		uint32_t m_flip_group;
 
 		int64_t m_rtMemoryUsed;
 		int64_t m_textureMemoryUsed;
