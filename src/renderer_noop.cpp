@@ -302,7 +302,7 @@ namespace bgfx { namespace noop
 		return s_renderNOOP;
 	}
 
-	void rendererDestroy()
+	void rendererDestroy(void* ctx)
 	{
 		bx::deleteObject(g_allocator, s_renderNOOP);
 		s_renderNOOP = NULL;

@@ -17,6 +17,7 @@
 
 #define BGFX_API_VERSION UINT32_C(135)
 
+#define BGFX_CAPS_RENDERER_MULTIADAPTER          UINT64_C(0x0000000000000000) //!< Renderer is on multi adapter.
 /**
  * Color RGB/alpha/depth write. When it's not specified write will be disabled.
  *

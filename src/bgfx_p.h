@@ -3611,7 +3611,6 @@ namespace bgfx
 	/// </summary>
 	/// <param name="ctx"></param>
 	void SetCurrentContext(Context* ctx);
-	Context* GetCurrentContext();
 
 	struct Context
 	{
@@ -3672,12 +3671,12 @@ namespace bgfx
 
 		// game thread
 		bool init(const Init& _init);
-		
+
 		void shutdown();
 
 		bool getRenderFrameCalled()
 		{
-			return m_renderFrameCalled;
+			return s_renderFrameCalled;
 		}
 
 		CommandBuffer& getCommandBuffer(CommandBuffer::Enum _cmd)
@@ -5791,6 +5790,7 @@ namespace bgfx
 #if BGFX_CONFIG_MULTITHREADED
 		void apiSemPost()
 		{
+			BGFX_PROFILER_SCOPE("bgfx/API thread post", kColorWait);
 			if (!m_singleThreaded)
 			{
 				m_apiSem.post();
@@ -5904,6 +5904,10 @@ namespace bgfx
 		/// Metamp
 		/// </summary>
 		bool m_renderFrameCalled = false;
+
+		bool s_renderFrameCalled = false;
+
+		uint32_t s_threadIndex;
 
 		Frame  m_frame[1+(BGFX_CONFIG_MULTITHREADED ? 1 : 0)];
 		Frame* m_render;

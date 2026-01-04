@@ -4755,7 +4755,7 @@ VK_IMPORT_DEVICE
 		return s_renderVK;
 	}
 
-	void rendererDestroy()
+	void rendererDestroy(void* ctx)
 	{
 		s_renderVK->shutdown();
 		bx::deleteObject(g_allocator, s_renderVK);

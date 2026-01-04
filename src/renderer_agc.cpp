@@ -13,7 +13,7 @@ namespace bgfx { namespace agc
 		return NULL;
 	}
 
-	void rendererDestroy()
+	void rendererDestroy(void* ctx)
 	{
 	}
 

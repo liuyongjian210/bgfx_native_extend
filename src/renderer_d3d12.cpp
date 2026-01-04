@@ -3805,7 +3805,10 @@ namespace bgfx { namespace d3d12
 		bool m_variableRateShadingSupport;
 	};
 
-	static RendererContextD3D12* s_renderD3D12;
+	/// <summary>
+	/// TLS 
+	/// </summary>
+	static BX_THREAD_LOCAL RendererContextD3D12* s_renderD3D12;
 
 	RendererContextI* rendererCreate(const Init& _init)
 	{
@@ -3818,7 +3821,7 @@ namespace bgfx { namespace d3d12
 		return s_renderD3D12;
 	}
 
-	void rendererDestroy()
+	void rendererDestroy(void* ctx)
 	{
 		s_renderD3D12->shutdown();
 		bx::deleteObject(g_allocator, s_renderD3D12);

@@ -113,6 +113,7 @@ namespace bgfx { namespace d3d11
 			DX_RELEASE(m_srv, 0);
 			DX_RELEASE(m_uav, 0);
 		}
+		void* s_renderD3D11_;
 
 		ID3D11Buffer* m_ptr;
 #if BGFX_CONFIG_RENDERER_DIRECT3D11_USE_STAGING_BUFFER
@@ -187,6 +188,8 @@ namespace bgfx { namespace d3d11
 			ID3D11VertexShader*  m_vertexShader;
 			ID3D11DeviceChild*   m_ptr;
 		};
+		void* s_renderD3D11_;
+
 		const Memory* m_code;
 		ID3D11Buffer* m_buffer;
 		UniformBuffer* m_constantBuffer;
@@ -267,7 +270,7 @@ namespace bgfx { namespace d3d11
 			ID3D11Texture2D* m_texture2d;
 			ID3D11Texture3D* m_texture3d;
 		};
-
+		void* s_renderD3D11_;
 		IntelDirectAccessResourceDescriptor* m_descriptor;
 	};
 
@@ -309,6 +312,8 @@ namespace bgfx { namespace d3d11
 		};
 
 		DirectAccessResourceD3D11 m_dar;
+
+		void* s_renderD3D11_;
 
 		union
 		{
@@ -362,6 +367,8 @@ namespace bgfx { namespace d3d11
 		ID3D11DepthStencilView*    m_dsv;
 		Dxgi::SwapChainI* m_swapChain;
 		void* m_nwh;
+		void* s_renderD3D11_;
+
 		uint32_t m_width;
 		uint32_t m_height;
 
@@ -414,6 +421,7 @@ namespace bgfx { namespace d3d11
 			uint32_t m_frameNum;
 		};
 
+		void* s_renderD3D11_;
 		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
 
 		Query m_query[BGFX_CONFIG_MAX_VIEWS*4];
@@ -439,7 +447,7 @@ namespace bgfx { namespace d3d11
 			ID3D11Query* m_ptr;
 			OcclusionQueryHandle m_handle;
 		};
-
+		void* s_renderD3D11_;
 		Query m_query[BGFX_CONFIG_MAX_OCCLUSION_QUERIES];
 		bx::RingBufferControl m_control;
 	};

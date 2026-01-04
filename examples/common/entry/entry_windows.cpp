@@ -505,11 +505,12 @@ namespace entry
 			mte.m_argc = _argc;
 			mte.m_argv = _argv;
 
-			bgfx::renderFrame();
-
 			bx::Thread thread;
 			thread.init(mte.threadFunc, &mte);
+
 			m_init = true;
+
+			//bgfx::renderFrame();
 
 			m_eventQueue.postSizeEvent(findHandle(m_hwnd[0]), m_width, m_height);
 
@@ -518,7 +519,7 @@ namespace entry
 
 			while (!m_exit)
 			{
-				bgfx::renderFrame();
+				//bgfx::renderFrame();
 
 				s_xinput.update(m_eventQueue);
 				WaitForInputIdle(GetCurrentProcess(), 16);

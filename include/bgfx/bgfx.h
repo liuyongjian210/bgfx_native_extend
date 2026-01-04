@@ -26,6 +26,16 @@ namespace bx { struct AllocatorI; }
 /// BGFX
 namespace bgfx
 {
+	typedef struct GpuContext_
+	{
+		void* context;
+		uint16_t deviceId;
+
+	}GpuContext;
+
+	GpuContext* GetCurrentGpuContext();
+	void SetCurrentGpuContext(GpuContext* ctx);
+
 	/// Fatal error enum.
 	///
 	/// @attention C99's equivalent binding is `bgfx_fatal_t`.
@@ -2083,13 +2093,21 @@ namespace bgfx
 	///
 	/// @attention C99's equivalent binding is `bgfx_init`.
 	///
-	bool init(const Init& _init = {});
+	bool init(const Init& _init = {},bool ctx = true);
+
+	/// Create the bgfx ctx.
+	///
+	/// @param[in] _init Initialization parameters. See: `bgfx::Init` for more info.
+	///
+	/// @returns `Context` if initialization was successful.
+	///
+	GpuContext* createCtx(const Init& _init);
 
 	/// Shutdown bgfx library.
 	///
 	/// @attention C99's equivalent binding is `bgfx_shutdown`.
 	///
-	void shutdown();
+	void shutdown(bool gpu_ctx = true);
 
 	/// Reset graphic settings and back-buffer size.
 	///

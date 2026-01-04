@@ -28,7 +28,7 @@ public:
 		m_reset  = BGFX_RESET_VSYNC;
 
 		bgfx::Init init;
-		init.type     = args.m_type;
+		init.type = bgfx::RendererType::Enum::Direct3D11;// args.m_type;
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
@@ -37,6 +37,9 @@ public:
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
 		bgfx::init(init);
+
+		bgfx::GpuContext* gpuCtx = bgfx::createCtx(init);
+		bgfx::SetCurrentGpuContext(gpuCtx);
 
 		// Enable debug text.
 		bgfx::setDebug(m_debug);

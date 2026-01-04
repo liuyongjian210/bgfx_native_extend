@@ -4886,7 +4886,7 @@ namespace bgfx { namespace gl
 		return s_renderGL;
 	}
 
-	void rendererDestroy()
+	void rendererDestroy(void* ctx)
 	{
 		s_renderGL->shutdown();
 		bx::deleteObject(g_allocator, s_renderGL);

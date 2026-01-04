@@ -37,11 +37,11 @@ namespace bgfx
 
 #	define BGFX_CHECK_API_THREAD()                                   \
 		BX_ASSERT(NULL != s_ctx, "Library is not initialized yet."); \
-		BX_ASSERT(BGFX_API_THREAD_MAGIC == s_threadIndex, "Must be called from main thread.")
+		BX_ASSERT(BGFX_API_THREAD_MAGIC == s_ctx->s_threadIndex, "Must be called from main thread.")
 
 #	define BGFX_CHECK_RENDER_THREAD()                         \
 		BX_ASSERT( (NULL != s_ctx && s_ctx->m_singleThreaded) \
-			|| ~BGFX_API_THREAD_MAGIC == s_threadIndex        \
+			|| ~BGFX_API_THREAD_MAGIC == s_ctx->s_threadIndex        \
 			, "Must be called from render thread."            \
 			)
 
@@ -369,8 +369,10 @@ namespace bgfx
 	static uint32_t s_threadIndex(0);
 #endif // BGFX_CONFIG_MULTITHREADED
 
-	static Context* s_ctx = NULL;
-	static bool s_renderFrameCalled = false;
+	static BX_THREAD_LOCAL GpuContext* s_gpuCtx = NULL;
+	static BX_THREAD_LOCAL Context* s_ctx = NULL;
+	static BX_THREAD_LOCAL bool s_renderFrameCalled = false;
+
 	InternalData g_internalData;
 	PlatformData g_platformData;
 	bool g_platformDataChangedSinceReset = false;
@@ -1534,24 +1536,21 @@ namespace bgfx
 
 	RenderFrame::Enum renderFrame(int32_t _msecs, Context* _ctx)
 	{
-		if (BX_ENABLED(BGFX_CONFIG_MULTITHREADED) )
+		if (BX_ENABLED(BGFX_CONFIG_MULTITHREADED))
 		{
-			if (s_renderFrameCalled)
+			if (!_ctx && s_ctx)
 			{
-				BGFX_CHECK_RENDER_THREAD();
+				return RenderFrame::Exiting;
 			}
 
-			if (_ctx == NULL)
-			{
-				_ctx = s_ctx;
-			}
+			s_ctx = _ctx;
 
-			if (NULL == s_ctx && _ctx== NULL)
+			if (!s_ctx)
 			{
-				s_renderFrameCalled = true;
-				s_threadIndex = ~BGFX_API_THREAD_MAGIC;
 				return RenderFrame::NoContext;
 			}
+
+			_ctx->s_renderFrameCalled = true;
 
 			int32_t msecs = -1 == _msecs
 				? BGFX_CONFIG_API_SEMAPHORE_TIMEOUT
@@ -2027,15 +2026,15 @@ namespace bgfx
 
 #if BGFX_CONFIG_MULTITHREADED
 		m_render->create(_init.limits.minResourceCbSize);
-
+				
 		if (s_renderFrameCalled)
 		{
 			// When bgfx::renderFrame is called before init render thread
 			// should not be created.
 			BX_TRACE("Application called bgfx::renderFrame directly, not creating render thread.");
 			m_singleThreaded = true
-				&& ~BGFX_API_THREAD_MAGIC == s_threadIndex
-				;
+				&& ~BGFX_API_THREAD_MAGIC == s_threadIndex;
+			//m_singleThreaded = true;
 		}
 		else
 		{
@@ -2048,9 +2047,9 @@ namespace bgfx
 		m_singleThreaded = true;
 #endif // BGFX_CONFIG_MULTITHREADED
 
-		BX_TRACE("Running in %s-threaded mode", m_singleThreaded ? "single" : "multi");
-
 		s_threadIndex = BGFX_API_THREAD_MAGIC;
+
+		BX_TRACE("Running in %s-threaded mode", m_singleThreaded ? "single" : "multi");
 
 		for (uint32_t ii = 0; ii < BX_COUNTOF(m_viewRemap); ++ii)
 		{
@@ -2717,13 +2716,13 @@ namespace bgfx
 	}
 
 	typedef RendererContextI* (*RendererCreateFn)(const Init& _init);
-	typedef void (*RendererDestroyFn)();
+	typedef void (*RendererDestroyFn)(void* _renderCtx);
 
 #define BGFX_RENDERER_CONTEXT(_namespace)                           \
 	namespace _namespace                                            \
 	{                                                               \
 		extern RendererContextI* rendererCreate(const Init& _init); \
-		extern void rendererDestroy();                              \
+		extern void rendererDestroy(void* _renderCtx);                              \
 	}
 
 	BGFX_RENDERER_CONTEXT(noop);
@@ -2982,7 +2981,7 @@ namespace bgfx
 	{
 		if (NULL != _renderCtx)
 		{
-			s_rendererCreator[_renderCtx->getRendererType()].destroyFn();
+			s_rendererCreator[_renderCtx->getRendererType()].destroyFn(_renderCtx);
 		}
 	}
 
@@ -3713,9 +3712,45 @@ namespace bgfx
 		resolve   = _resolve;
 	}
 
-	bool init(const Init& _userInit)
+	GpuContext* createCtx(const Init& _init)
 	{
-		if (NULL != s_ctx)
+		struct ErrorState
+		{
+			enum Enum
+			{
+				Default,
+				ContextAllocated,
+			};
+		};
+
+		ErrorState::Enum errorState = ErrorState::Default;
+
+		errorState = ErrorState::ContextAllocated;
+	
+		s_gpuCtx = BX_ALIGNED_NEW(g_allocator, GpuContext, Context::kAlignment);
+		
+		GpuContext* gpuCtx = BX_ALIGNED_NEW(g_allocator, GpuContext, Context::kAlignment);
+		Context* ctx = BX_ALIGNED_NEW(g_allocator, Context, Context::kAlignment);
+		s_gpuCtx->context = ctx;
+		s_gpuCtx->deviceId = _init.deviceId;
+
+		//m_singleThreaded true
+		ctx->s_renderFrameCalled = false;
+		bgfx::SetCurrentContext((Context*)s_gpuCtx->context);
+
+		if (ctx->init(_init))
+		{
+			BX_TRACE("Init complete.");
+			gpuCtx->context = ctx;
+			gpuCtx->deviceId = _init.deviceId;
+			return gpuCtx;
+		}
+		return gpuCtx;
+	}
+
+	bool init(const Init& _userInit, bool new_ctx)
+	{
+		if (!BGFX_CAPS_RENDERER_MULTIADAPTER && NULL != s_ctx)
 		{
 			BX_TRACE("bgfx is already initialized.");
 			return false;
@@ -3796,54 +3831,28 @@ namespace bgfx
 		//      | +------- API version    (from https://github.com/bkaradzic/bgfx/blob/master/scripts/bgfx.idl#L4)
 		//      +--------- Major revision (always 1)
 		BX_TRACE("Version 1.%d.%d (commit: " BGFX_REV_SHA1 ")", BGFX_API_VERSION, BGFX_REV_NUMBER);
-
-		errorState = ErrorState::ContextAllocated;
-
-		s_ctx = BX_ALIGNED_NEW(g_allocator, Context, Context::kAlignment);
-		if (s_ctx->init(init) )
+		if (new_ctx)
 		{
-			BX_TRACE("Init complete.");
-			return true;
+			bgfx::GpuContext* gpuCtx = bgfx::createCtx(init);
+			bgfx::SetCurrentGpuContext(gpuCtx);
 		}
+		return true;
 
-		BX_TRACE("Init failed.");
-
-		switch (errorState)
-		{
-		case ErrorState::ContextAllocated:
-			bx::deleteObject(g_allocator, s_ctx, Context::kAlignment);
-			s_ctx = NULL;
-			[[fallthrough]];
-
-		case ErrorState::Default:
-			if (NULL != s_callbackStub)
-			{
-				bx::deleteObject(g_allocator, s_callbackStub);
-				s_callbackStub = NULL;
-			}
-
-			if (NULL != s_allocatorStub)
-			{
-				bx::DefaultAllocator allocator;
-				bx::deleteObject(&allocator, s_allocatorStub);
-				s_allocatorStub = NULL;
-			}
-
-			s_threadIndex = 0;
-			g_callback    = NULL;
-			g_allocator   = NULL;
-			break;
-		}
-
-		return false;
 	}
 
-	void shutdown()
+	void shutdown(bool gpu_ctx)
 	{
 		BX_TRACE("Shutdown...");
 
 		BGFX_CHECK_API_THREAD();
+
 		Context* ctx = s_ctx; // it's going to be NULLd inside shutdown.
+		if (gpu_ctx)
+		{
+			bgfx::GpuContext* gpuCtx = bgfx::GetCurrentGpuContext();
+			ctx = (Context*)gpuCtx->context;
+		}
+
 		ctx->shutdown();
 		BX_ASSERT(NULL == s_ctx, "bgfx is should be uninitialized here.");
 
@@ -3869,7 +3878,8 @@ namespace bgfx
 			s_allocatorStub = NULL;
 		}
 
-		s_threadIndex = 0;
+		//s_ctx->s_threadIndex = 0;
+
 		g_callback    = NULL;
 		g_allocator   = NULL;
 	}
@@ -6205,20 +6215,33 @@ namespace bgfx
 		bgfx_allocator_interface_t* m_interface;
 	};
 
+	///// <summary>
+	///// metamp
+	///// TLS storage ctx to thread 
+	///// </summary>
+	///// <param name="ctx"></param>
+	void SetCurrentGpuContext(GpuContext* ctx)
+	{
+		if (!ctx)
+		{
+			return;
+		}
+		s_ctx = (Context*)ctx->context;
+	}
+
 	/// <summary>
-	/// metamp
+	/// 
 	/// </summary>
-	/// <param name="ctx"></param>
+	/// <returns></returns>
+	GpuContext* GetCurrentGpuContext()
+	{
+		return s_gpuCtx;
+	}
+
 	void SetCurrentContext(Context* ctx)
 	{
 		s_ctx = ctx;
 	}
-
-	Context* GetCurrentContext()
-	{
-		return s_ctx;
-	}
-
 } // namespace bgfx
 
 #include "bgfx.idl.inl"

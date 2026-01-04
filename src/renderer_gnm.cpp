@@ -39,7 +39,7 @@ namespace bgfx { namespace gnm
 		return NULL;
 	}
 
-	void rendererDestroy()
+	void rendererDestroy(void* ctx)
 	{
 	}
 

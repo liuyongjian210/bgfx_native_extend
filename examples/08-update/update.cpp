@@ -9,7 +9,7 @@
 #include "imgui/imgui.h"
 #include "entry/entry.h"
 #include <bimg/decode.h>
-
+#include <bgfx/bgfx.h>
 #include <bx/rng.h>
 
 #include <list>
@@ -243,7 +243,7 @@ public:
 		m_reset  = BGFX_RESET_VSYNC;
 
 		bgfx::Init init;
-		init.type     = args.m_type;
+		init.type = bgfx::RendererType::Enum::Direct3D11;// args.m_type;
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
@@ -251,7 +251,10 @@ public:
 		init.resolution.width  = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
+
 		bgfx::init(init);
+
+		//bgfx::GpuContext* gpuCtx = bgfx::createCtx(init);
 
 		// Enable debug text.
 		bgfx::setDebug(m_debug);
