@@ -307,9 +307,10 @@ namespace bgfx
 	constexpr uint32_t kColorMarker   = toAbgr8(0xff, 0x00, 0x00);
 	constexpr uint32_t kColorWait     = toAbgr8(0xff, 0x8b, 0x94);
 
-	extern InternalData g_internalData;
-	extern PlatformData g_platformData;
+	BX_THREAD_LOCAL extern InternalData g_internalData;
+	BX_THREAD_LOCAL extern PlatformData g_platformData;
 	extern bool g_platformDataChangedSinceReset;
+
 	extern void isFrameBufferValid(uint8_t _num, const Attachment* _attachment, bx::Error* _err);
 	extern void isIdentifierValid(const bx::StringView& _name, bx::Error* _err);
 
@@ -584,9 +585,9 @@ namespace bgfx
 	};
 
 	extern const uint32_t g_uniformTypeSize[UniformType::Count+1];
-	extern CallbackI* g_callback;
+	BX_THREAD_LOCAL extern CallbackI* g_callback;
 	extern bx::AllocatorI* g_allocator;
-	extern Caps g_caps;
+	BX_THREAD_LOCAL extern Caps g_caps;
 
 	struct ProfilerScope
 	{
@@ -5903,8 +5904,6 @@ namespace bgfx
 		/// <summary>
 		/// Metamp
 		/// </summary>
-		bool m_renderFrameCalled = false;
-
 		bool s_renderFrameCalled = false;
 
 		uint32_t s_threadIndex;

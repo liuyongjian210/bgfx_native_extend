@@ -732,6 +732,10 @@ namespace bgfx
 	struct Init
 	{
 		Init();
+		/// <summary>
+		/// render / main thread 
+		/// </summary>
+		bool multiRenderThreaded = false;
 
 		/// Select rendering backend. When set to RendererType::Count
 		/// a default rendering backend will be selected appropriate to the platform.

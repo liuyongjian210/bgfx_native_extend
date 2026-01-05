@@ -358,10 +358,10 @@ namespace bgfx
 	static AllocatorStub* s_allocatorStub = NULL;
 	static bool s_graphicsDebuggerPresent = false;
 
-	CallbackI* g_callback = NULL;
+	BX_THREAD_LOCAL CallbackI* g_callback = NULL;
 	bx::AllocatorI* g_allocator = NULL;
 
-	Caps g_caps;
+	BX_THREAD_LOCAL Caps g_caps;
 
 #if BGFX_CONFIG_MULTITHREADED
 	static BX_THREAD_LOCAL uint32_t s_threadIndex(0);
@@ -373,8 +373,9 @@ namespace bgfx
 	static BX_THREAD_LOCAL Context* s_ctx = NULL;
 	static BX_THREAD_LOCAL bool s_renderFrameCalled = false;
 
-	InternalData g_internalData;
-	PlatformData g_platformData;
+	BX_THREAD_LOCAL InternalData g_internalData;
+	BX_THREAD_LOCAL PlatformData g_platformData;
+
 	bool g_platformDataChangedSinceReset = false;
 
 	static Handle::TypeName s_typeName[] =
@@ -1550,8 +1551,6 @@ namespace bgfx
 				return RenderFrame::NoContext;
 			}
 
-			_ctx->s_renderFrameCalled = true;
-
 			int32_t msecs = -1 == _msecs
 				? BGFX_CONFIG_API_SEMAPHORE_TIMEOUT
 				: _msecs
@@ -2032,9 +2031,8 @@ namespace bgfx
 			// When bgfx::renderFrame is called before init render thread
 			// should not be created.
 			BX_TRACE("Application called bgfx::renderFrame directly, not creating render thread.");
-			m_singleThreaded = true
-				&& ~BGFX_API_THREAD_MAGIC == s_threadIndex;
-			//m_singleThreaded = true;
+			m_singleThreaded = true;//
+				//&& ~BGFX_API_THREAD_MAGIC == s_threadIndex;
 		}
 		else
 		{
@@ -3735,7 +3733,7 @@ namespace bgfx
 		s_gpuCtx->deviceId = _init.deviceId;
 
 		//m_singleThreaded true
-		ctx->s_renderFrameCalled = false;
+		ctx->s_renderFrameCalled = !_init.multiRenderThreaded;
 		bgfx::SetCurrentContext((Context*)s_gpuCtx->context);
 
 		if (ctx->init(_init))
