@@ -648,16 +648,16 @@ namespace bgfx { namespace d3d11
 	static PFN_AGS_DRIVER_EXTENSIONS_MULTIDRAW_INSTANCED_INDIRECT         agsDriverExtensions_MultiDrawInstancedIndirect;
 	static PFN_AGS_DRIVER_EXTENSIONS_MULTIDRAW_INDEXED_INSTANCED_INDIRECT agsDriverExtensions_MultiDrawIndexedInstancedIndirect;
 
-	typedef void (* MultiDrawIndirectFn)(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11);
+	typedef void (* MultiDrawIndirectFn)(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride);
 
-	void stubMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11 = nullptr);
-	void stubMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11 = nullptr);
+	void stubMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride);
+	void stubMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride);
 
-	void amdAgsMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11 = nullptr);
-	void amdAgsMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11 = nullptr);
+	void amdAgsMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride);
+	void amdAgsMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride);
 
-	void nvapiMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11 = nullptr);
-	void nvapiMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11 = nullptr);
+	void nvapiMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride);
+	void nvapiMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride);
 
 	static MultiDrawIndirectFn multiDrawInstancedIndirect;
 	static MultiDrawIndirectFn multiDrawIndexedInstancedIndirect;
@@ -669,9 +669,9 @@ namespace bgfx { namespace d3d11
 	static PFN_D3DPERF_END_EVENT    D3DPERF_EndEvent;
 #endif // USE_D3D11_DYNAMIC_LIB
 
-	int  WINAPI d3d11Annotation_BeginEvent(DWORD _color, LPCWSTR _name, void* s_renderD3D11);
-	int  WINAPI d3d11Annotation_EndEvent(void* s_renderD3D11);
-	void WINAPI d3d11Annotation_SetMarker(DWORD _color, LPCWSTR _name, void* s_renderD3D11);
+	int  WINAPI d3d11Annotation_BeginEvent(DWORD _color, LPCWSTR _name);
+	int  WINAPI d3d11Annotation_EndEvent();
+	void WINAPI d3d11Annotation_SetMarker(DWORD _color, LPCWSTR _name);
 
 	struct RendererContextD3D11 : public RendererContextI
 	{
@@ -734,34 +734,6 @@ namespace bgfx { namespace d3d11
 			||  _init.profile)
 			{
 				m_renderDocDll = loadRenderDoc();
-			}
-
-			m_gpuTimer.s_renderD3D11_ = this;
-			m_occlusionQuery.s_renderD3D11_ = this;
-
-			for (auto& item : m_shaders)
-			{
-				item.s_renderD3D11_ = this;
-			}
-
-			for (auto& item : m_textures)
-			{
-				item.s_renderD3D11_ = this;
-			}
-
-			for (auto& item : m_frameBuffers)
-			{
-				item.s_renderD3D11_ = this;
-			}
-
-			for (auto& item : m_vertexBuffers)
-			{
-				item.s_renderD3D11_ = this;
-			}
-
-			for (auto& item : m_indexBuffers)
-			{
-				item.s_renderD3D11_ = this;
 			}
 
 			m_fbh = BGFX_INVALID_HANDLE;
@@ -1205,9 +1177,9 @@ namespace bgfx { namespace d3d11
 
 				if (SUCCEEDED(hr) )
 				{
-					/*D3DPERF_BeginEvent = d3d11Annotation_BeginEvent;
+					D3DPERF_BeginEvent = d3d11Annotation_BeginEvent;
 					D3DPERF_EndEvent   = d3d11Annotation_EndEvent;
-					D3DPERF_SetMarker  = d3d11Annotation_SetMarker;*/
+					D3DPERF_SetMarker  = d3d11Annotation_SetMarker;
 				}
 			}
 #endif // USE_D3D11_DYNAMIC_LIB
@@ -3759,11 +3731,11 @@ namespace bgfx { namespace d3d11
 		bool m_directAccessSupport;
 	};
 
-	//static RendererContextD3D11* s_renderD3D11_;
+	static BX_THREAD_LOCAL RendererContextD3D11* s_renderD3D11;
 
 	RendererContextI* rendererCreate(const Init& _init)
 	{
-		RendererContextD3D11* s_renderD3D11 = BX_NEW(g_allocator, RendererContextD3D11);
+		s_renderD3D11 = BX_NEW(g_allocator, RendererContextD3D11);
 		if (!s_renderD3D11->init(_init) )
 		{
 			bx::deleteObject(g_allocator, s_renderD3D11);
@@ -3772,18 +3744,17 @@ namespace bgfx { namespace d3d11
 		return s_renderD3D11;
 	}
 
-	void rendererDestroy(void* s_renderD3D11_)
+	void rendererDestroy(void* s_renderD3D11)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
-		s_renderD3D11->shutdown();
+		RendererContextD3D11* s_renderD3D11_ = (RendererContextD3D11*)s_renderD3D11;
+		s_renderD3D11_->shutdown();
 		bx::deleteObject(g_allocator, s_renderD3D11);
 		s_renderD3D11 = NULL;
 	}
 
-	void stubMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11)
+	void stubMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride)
 	{
-		RendererContextD3D11* s_renderD3D11_ = (RendererContextD3D11*)s_renderD3D11;
-		ID3D11DeviceContext* deviceCtx = s_renderD3D11_->m_deviceCtx;
+		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 		for (uint32_t ii = 0; ii < _numDrawIndirect; ++ii)
 		{
 			deviceCtx->DrawInstancedIndirect(_ptr, _offset);
@@ -3791,10 +3762,9 @@ namespace bgfx { namespace d3d11
 		}
 	}
 
-	void stubMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11)
+	void stubMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride)
 	{
-		RendererContextD3D11* s_renderD3D11_ = (RendererContextD3D11*)s_renderD3D11;
-		ID3D11DeviceContext* deviceCtx = s_renderD3D11_->m_deviceCtx;
+		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 		for (uint32_t ii = 0; ii < _numDrawIndirect; ++ii)
 		{
 			deviceCtx->DrawIndexedInstancedIndirect(_ptr, _offset);
@@ -3802,43 +3772,38 @@ namespace bgfx { namespace d3d11
 		}
 	}
 
-	void amdAgsMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11)
+	void amdAgsMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride)
 	{
-		RendererContextD3D11* s_renderD3D11_ = (RendererContextD3D11*)s_renderD3D11;
-		agsDriverExtensions_MultiDrawInstancedIndirect(s_renderD3D11_->m_ags, _numDrawIndirect, _ptr, _offset, _stride);
+		agsDriverExtensions_MultiDrawInstancedIndirect(s_renderD3D11->m_ags, _numDrawIndirect, _ptr, _offset, _stride);
 	}
 
-	void amdAgsMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11)
+	void amdAgsMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride)
 	{
-		RendererContextD3D11* s_renderD3D11_ = (RendererContextD3D11*)s_renderD3D11;
-		agsDriverExtensions_MultiDrawIndexedInstancedIndirect(s_renderD3D11_->m_ags, _numDrawIndirect, _ptr, _offset, _stride);
+		agsDriverExtensions_MultiDrawIndexedInstancedIndirect(s_renderD3D11->m_ags, _numDrawIndirect, _ptr, _offset, _stride);
 	}
 
-	void nvapiMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11)
+	void nvapiMultiDrawInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride)
 	{
-		RendererContextD3D11* s_renderD3D11_ = (RendererContextD3D11*)s_renderD3D11;
-		s_renderD3D11_->m_nvapi.nvApiD3D11MultiDrawInstancedIndirect(s_renderD3D11_->m_deviceCtx, _numDrawIndirect, _ptr, _offset, _stride);
+		s_renderD3D11->m_nvapi.nvApiD3D11MultiDrawInstancedIndirect(s_renderD3D11->m_deviceCtx, _numDrawIndirect, _ptr, _offset, _stride);
 	}
 
-	void nvapiMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride, void* s_renderD3D11)
+	void nvapiMultiDrawIndexedInstancedIndirect(uint32_t _numDrawIndirect, ID3D11Buffer* _ptr, uint32_t _offset, uint32_t _stride)
 	{
-		RendererContextD3D11* s_renderD3D11_ = (RendererContextD3D11*)s_renderD3D11;
-		s_renderD3D11_->m_nvapi.nvApiD3D11MultiDrawIndexedInstancedIndirect(s_renderD3D11_->m_deviceCtx, _numDrawIndirect, _ptr, _offset, _stride);
+		s_renderD3D11->m_nvapi.nvApiD3D11MultiDrawIndexedInstancedIndirect(s_renderD3D11->m_deviceCtx, _numDrawIndirect, _ptr, _offset, _stride);
 	}
 
-	int  WINAPI d3d11Annotation_BeginEvent(DWORD _color, LPCWSTR _name, void* s_renderD3D11)
+	int  WINAPI d3d11Annotation_BeginEvent(DWORD _color, LPCWSTR _name)
 	{
 		BX_UNUSED(_color);
-		RendererContextD3D11* s_renderD3D11_ = (RendererContextD3D11*)s_renderD3D11;
-		return s_renderD3D11_->m_annotation->BeginEvent(_name);
+		return s_renderD3D11->m_annotation->BeginEvent(_name);
 	}
 
-	int  WINAPI d3d11Annotation_EndEvent( RendererContextD3D11* s_renderD3D11)
+	int  WINAPI d3d11Annotation_EndEvent()
 	{
 		return s_renderD3D11->m_annotation->EndEvent();
 	}
 
-	void WINAPI d3d11Annotation_SetMarker(DWORD _color, LPCWSTR _name, RendererContextD3D11* s_renderD3D11)
+	void WINAPI d3d11Annotation_SetMarker(DWORD _color, LPCWSTR _name)
 	{
 		BX_UNUSED(_color);
 		s_renderD3D11->m_annotation->SetMarker(_name);
@@ -3927,7 +3892,6 @@ namespace bgfx { namespace d3d11
 			}
 		}
 
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
 		ID3D11Device* device = s_renderD3D11->m_device;
 
 		D3D11_SUBRESOURCE_DATA srd;
@@ -4013,7 +3977,6 @@ namespace bgfx { namespace d3d11
 
 	void BufferD3D11::update(uint32_t _offset, uint32_t _size, void* _data, bool _discard)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
 		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 		BX_ASSERT(m_dynamic, "Must be dynamic!");
 
@@ -4073,8 +4036,7 @@ namespace bgfx { namespace d3d11
 			srcBox.bottom = 1;
 			srcBox.back   = 1;
 
-			RendererContextD3D11* s_renderD3D11_ = (RendererContextD3D11*)s_renderD3D11;
-			ID3D11Device* device = s_renderD3D11_->m_device;
+			ID3D11Device* device = s_renderD3D11->m_device;
 
 			ID3D11Buffer* ptr;
 			DX_CHECK(device->CreateBuffer(&desc, &srd, &ptr) );
@@ -4096,7 +4058,6 @@ namespace bgfx { namespace d3d11
 
 	void VertexBufferD3D11::create(uint32_t _size, void* _data, VertexLayoutHandle _layoutHandle, uint16_t _flags)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
 		m_layoutHandle = _layoutHandle;
 		uint16_t stride = isValid(_layoutHandle)
 			? s_renderD3D11->m_vertexLayouts[_layoutHandle.idx].m_stride
@@ -4227,8 +4188,6 @@ namespace bgfx { namespace d3d11
 
 	void ShaderD3D11::create(const Memory* _mem)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
-
 		bx::MemoryReader reader(_mem->data, _mem->size);
 
 		bx::ErrorAssert err;
@@ -4444,7 +4403,7 @@ namespace bgfx { namespace d3d11
 
 	void* DirectAccessResourceD3D11::createTexture2D(const D3D11_TEXTURE2D_DESC* _gpuDesc, const D3D11_SUBRESOURCE_DATA* _srd, ID3D11Texture2D** _gpuTexture2d)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11Device* device = s_renderD3D11->m_device;
 		DX_CHECK(setIntelDirectAccessResource(device) );
 		DX_CHECK(device->CreateTexture2D(_gpuDesc, _srd, _gpuTexture2d) );
@@ -4470,7 +4429,7 @@ namespace bgfx { namespace d3d11
 
 	void* DirectAccessResourceD3D11::createTexture3D(const D3D11_TEXTURE3D_DESC* _gpuDesc, const D3D11_SUBRESOURCE_DATA* _srd, ID3D11Texture3D** _gpuTexture3d)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11Device* device = s_renderD3D11->m_device;
 		DX_CHECK(setIntelDirectAccessResource(device) );
 		DX_CHECK(device->CreateTexture3D(_gpuDesc, _srd, _gpuTexture3d) );
@@ -4498,7 +4457,7 @@ namespace bgfx { namespace d3d11
 	{
 		if (NULL != m_descriptor)
 		{
-			RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+			
 			s_renderD3D11->m_deviceCtx->Unmap(m_ptr, 0);
 			m_descriptor = NULL;
 			DX_RELEASE(m_ptr, 0);
@@ -4524,7 +4483,7 @@ namespace bgfx { namespace d3d11
 		{
 			return nullptr;
 		}
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 
 		D3D11_TEXTURE2D_DESC tex2d_desc;
 		tex2d->GetDesc(&tex2d_desc);
@@ -4544,7 +4503,7 @@ namespace bgfx { namespace d3d11
 
 	ID3D11ShaderResourceView* TextureD3D11::createFromNativeSharedRes(uintptr_t nativeSharedRes)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11Resource* d3dSharedRes = NULL;
 		HRESULT result = s_renderD3D11->m_device->OpenSharedResource((HANDLE)nativeSharedRes, __uuidof(ID3D11Resource),(void**) & d3dSharedRes);
 		if (result != S_OK) {
@@ -4738,7 +4697,7 @@ namespace bgfx { namespace d3d11
 				srvd.Format = getSrvFormat();
 			}
 
-			RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+			
 			const bool directAccess = s_renderD3D11->m_directAccessSupport
 				&& !renderTarget
 				&& !readBack
@@ -4934,7 +4893,7 @@ namespace bgfx { namespace d3d11
 	{
 		m_dar.destroy();
 
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		s_renderD3D11->m_srvUavLru.invalidateWithParent(getHandle().idx);
 		DX_RELEASE(m_rt, 0);
 		DX_RELEASE(m_srv, 0);
@@ -4949,7 +4908,7 @@ namespace bgfx { namespace d3d11
 	{
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 
 		const bool readable = NULL != m_srv;
 
@@ -4987,7 +4946,7 @@ namespace bgfx { namespace d3d11
 
 	void TextureD3D11::update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 
 		D3D11_BOX box;
@@ -5055,7 +5014,7 @@ namespace bgfx { namespace d3d11
 
 	void TextureD3D11::commit(uint8_t _stage, uint32_t _flags, const float _palette[][4])
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		TextureStage& ts = s_renderD3D11->m_textureStage;
 
 		if (0 != (_flags & BGFX_SAMPLER_SAMPLE_STENCIL) )
@@ -5082,7 +5041,7 @@ namespace bgfx { namespace d3d11
 
 	void TextureD3D11::resolve(uint8_t _resolve, uint32_t _layer, uint32_t _numLayers, uint32_t _mip) const
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 
 		const bool needResolve = NULL != m_rt;
@@ -5106,7 +5065,7 @@ namespace bgfx { namespace d3d11
 
 	TextureHandle TextureD3D11::getHandle() const
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		TextureHandle handle = { (uint16_t)(this - s_renderD3D11->m_textures) };
 		return handle;
 	}
@@ -5149,7 +5108,7 @@ namespace bgfx { namespace d3d11
 
 	void FrameBufferD3D11::create(uint16_t _denseIdx, void* _nwh, uint32_t _width, uint32_t _height, TextureFormat::Enum _format, TextureFormat::Enum _depthFormat)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		SwapChainDesc scd;
 		bx::memCopy(&scd, &s_renderD3D11->m_scd, sizeof(SwapChainDesc) );
 		scd.format     = TextureFormat::Count == _format ? scd.format : s_textureFormat[_format].m_fmt;
@@ -5244,7 +5203,7 @@ namespace bgfx { namespace d3d11
 	{
 		m_width  = 0;
 		m_height = 0;
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		if (0 < m_numTh)
 		{
 			m_num    = 0;
@@ -5443,7 +5402,7 @@ namespace bgfx { namespace d3d11
 
 	void FrameBufferD3D11::resolve()
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		if (0 < m_numTh)
 		{
 			for (uint32_t ii = 0; ii < m_numTh; ++ii)
@@ -5461,7 +5420,7 @@ namespace bgfx { namespace d3d11
 
 	void FrameBufferD3D11::clear(const Clear& _clear, const float _palette[][4])
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 
 		if (BGFX_CLEAR_COLOR & _clear.m_flags)
@@ -5509,7 +5468,7 @@ namespace bgfx { namespace d3d11
 
 	void FrameBufferD3D11::set()
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		s_renderD3D11->m_deviceCtx->OMSetRenderTargets(m_num, m_rtv, m_dsv);
 		m_needPresent = UINT16_MAX != m_denseIdx;
 		s_renderD3D11->m_currentColor        = m_rtv[0];
@@ -5531,7 +5490,7 @@ namespace bgfx { namespace d3d11
 
 	void TimerQueryD3D11::postReset()
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11Device* device = s_renderD3D11->m_device;
 
 		D3D11_QUERY_DESC qd;
@@ -5571,7 +5530,7 @@ namespace bgfx { namespace d3d11
 
 	uint32_t TimerQueryD3D11::begin(uint32_t _resultIdx, uint32_t _frameNum)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 
 		while (0 == m_control.reserve(1) )
@@ -5598,7 +5557,7 @@ namespace bgfx { namespace d3d11
 
 	void TimerQueryD3D11::end(uint32_t _idx)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 		Query& query = m_query[_idx];
 		query.m_ready = true;
@@ -5613,7 +5572,7 @@ namespace bgfx { namespace d3d11
 
 	bool TimerQueryD3D11::update()
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		if (0 != m_control.getNumUsed() )
 		{
 			Query& query = m_query[m_control.m_read];
@@ -5660,7 +5619,7 @@ namespace bgfx { namespace d3d11
 
 	void OcclusionQueryD3D11::postReset()
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11Device* device = s_renderD3D11->m_device;
 
 		D3D11_QUERY_DESC desc;
@@ -5688,7 +5647,7 @@ namespace bgfx { namespace d3d11
 		{
 			resolve(_render, true);
 		}
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 		Query& query = m_query[m_control.m_current];
 		deviceCtx->Begin(query.m_ptr);
@@ -5697,7 +5656,7 @@ namespace bgfx { namespace d3d11
 
 	void OcclusionQueryD3D11::end()
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 		Query& query = m_query[m_control.m_current];
 		deviceCtx->End(query.m_ptr);
@@ -5706,7 +5665,7 @@ namespace bgfx { namespace d3d11
 
 	void OcclusionQueryD3D11::resolve(Frame* _render, bool _wait)
 	{
-		RendererContextD3D11* s_renderD3D11 = (RendererContextD3D11*)s_renderD3D11_;
+		
 		ID3D11DeviceContext* deviceCtx = s_renderD3D11->m_deviceCtx;
 
 		while (0 != m_control.getNumUsed() )
@@ -6593,8 +6552,7 @@ namespace bgfx { namespace d3d11
 								  numDrawIndirect
 								, ptr
 								, draw.m_startIndirect * BGFX_CONFIG_DRAW_INDIRECT_STRIDE
-								, BGFX_CONFIG_DRAW_INDIRECT_STRIDE
-								,this);
+								, BGFX_CONFIG_DRAW_INDIRECT_STRIDE);
 						}
 						else
 						{
@@ -6607,8 +6565,7 @@ namespace bgfx { namespace d3d11
 								  numDrawIndirect
 								, ptr
 								, draw.m_startIndirect * BGFX_CONFIG_DRAW_INDIRECT_STRIDE
-								, BGFX_CONFIG_DRAW_INDIRECT_STRIDE
-								,this);
+								, BGFX_CONFIG_DRAW_INDIRECT_STRIDE);
 						}
 					}
 					else

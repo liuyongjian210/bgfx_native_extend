@@ -4742,7 +4742,7 @@ VK_IMPORT_DEVICE
 		FrameBufferHandle m_fbh;
 	};
 
-	static RendererContextVK* s_renderVK;
+	static BX_THREAD_LOCAL RendererContextVK* s_renderVK;
 
 	RendererContextI* rendererCreate(const Init& _init)
 	{
