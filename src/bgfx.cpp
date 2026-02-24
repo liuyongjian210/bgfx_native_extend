@@ -354,9 +354,9 @@ namespace bgfx
 #endif // BGFX_CONFIG_MEMORY_TRACKING
 	};
 
-	static CallbackStub*  s_callbackStub  = NULL;
-	static AllocatorStub* s_allocatorStub = NULL;
-	static bool s_graphicsDebuggerPresent = false;
+	static BX_THREAD_LOCAL CallbackStub*  s_callbackStub  = NULL;
+	static BX_THREAD_LOCAL  AllocatorStub* s_allocatorStub = NULL;
+	static BX_THREAD_LOCAL  bool s_graphicsDebuggerPresent = false;
 
 	BX_THREAD_LOCAL CallbackI* g_callback = NULL;
 	bx::AllocatorI* g_allocator = NULL;

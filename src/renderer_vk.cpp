@@ -640,7 +640,7 @@ VK_IMPORT_DEVICE
 		BX_UNUSED(_userData, _size, _allocationType, _allocationScope);
 	}
 
-	static VkAllocationCallbacks s_allocationCb =
+	static BX_THREAD_LOCAL VkAllocationCallbacks s_allocationCb =
 	{
 		NULL,
 		allocationFunction,

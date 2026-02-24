@@ -11,8 +11,8 @@
 
 namespace bgfx { namespace d3d11
 {
-	static wchar_t s_viewNameW[BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
-	static char    s_viewName [BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
+	static wchar_t BX_THREAD_LOCAL s_viewNameW[BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
+	static char BX_THREAD_LOCAL   s_viewName [BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
 
 	inline void setViewType(ViewId _view, const bx::StringView _str)
 	{
@@ -66,7 +66,7 @@ namespace bgfx { namespace d3d11
 
 	BX_PRAGMA_DIAGNOSTIC_PUSH();
 	BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4268) // warning C4268: '' : 'const' static/global data initialized with compiler generated default constructor fills the object with zeros
-	static const Zero s_zero;
+	static const BX_THREAD_LOCAL Zero s_zero;
 	BX_PRAGMA_DIAGNOSTIC_POP();
 
 	static const uint32_t s_checkMsaa[] =
@@ -5833,7 +5833,7 @@ namespace bgfx { namespace d3d11
 		RenderBind currentBind;
 		currentBind.clear();
 
-		static ViewState viewState;
+		static BX_THREAD_LOCAL ViewState viewState;
 		viewState.reset(_render);
 
 		bool wireframe = !!(_render->m_debug&BGFX_DEBUG_WIREFRAME);
@@ -6690,13 +6690,13 @@ namespace bgfx { namespace d3d11
 		int64_t timeEnd = bx::getHPCounter();
 		int64_t frameTime = timeEnd - timeBegin;
 
-		static int64_t min = frameTime;
-		static int64_t max = frameTime;
+		static BX_THREAD_LOCAL int64_t min = frameTime;
+		static BX_THREAD_LOCAL int64_t max = frameTime;
 		min = min > frameTime ? frameTime : min;
 		max = max < frameTime ? frameTime : max;
 
-		static uint32_t maxGpuLatency = 0;
-		static double   maxGpuElapsed = 0.0f;
+		static BX_THREAD_LOCAL uint32_t maxGpuLatency = 0;
+		static BX_THREAD_LOCAL double   maxGpuElapsed = 0.0f;
 		double elapsedGpuMs = 0.0;
 
 		if (UINT32_MAX != frameQueryIdx)
@@ -6736,7 +6736,7 @@ namespace bgfx { namespace d3d11
 			m_needPresent = true;
 			TextVideoMem& tvm = m_textVideoMem;
 
-			static int64_t next = timeEnd;
+			static BX_THREAD_LOCAL int64_t next = timeEnd;
 
 			if (timeEnd >= next)
 			{
