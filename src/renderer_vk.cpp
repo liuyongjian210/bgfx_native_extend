@@ -19,7 +19,7 @@
 
 namespace bgfx { namespace vk
 {
-	static char s_viewName[BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
+	static BX_THREAD_LOCAL char s_viewName[BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
 
 	inline void setViewType(ViewId _view, const bx::StringView _str)
 	{
@@ -9049,7 +9049,7 @@ retry:
 		currentState.m_stateFlags = BGFX_STATE_NONE;
 		currentState.m_stencil    = packStencil(BGFX_STENCIL_NONE, BGFX_STENCIL_NONE);
 
-		static ViewState viewState;
+		static BX_THREAD_LOCAL ViewState viewState;
 		viewState.reset(_render);
 
 		bool wireframe = !!(_render->m_debug&BGFX_DEBUG_WIREFRAME);
@@ -10050,7 +10050,7 @@ retry:
 
 			TextVideoMem& tvm = m_textVideoMem;
 
-			static int64_t next = timeEnd;
+			static BX_THREAD_LOCAL int64_t next = timeEnd;
 
 			if (timeEnd >= next)
 			{
