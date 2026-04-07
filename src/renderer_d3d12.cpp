@@ -22,7 +22,7 @@ PFN_PIX_EVENTS_REPLACE_BLOCK bgfx_PIXEventsReplaceBlock;
 
 namespace bgfx { namespace d3d12
 {
-	static char s_viewName[BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
+	static BX_THREAD_LOCAL char s_viewName[BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
 
 	inline void setViewType(ViewId _view, const bx::StringView _str)
 	{
@@ -657,14 +657,14 @@ namespace bgfx { namespace d3d12
 	}
 
 #if USE_D3D12_DYNAMIC_LIB
-	static PFN_D3D12_ENABLE_EXPERIMENTAL_FEATURES D3D12EnableExperimentalFeatures;
-	static PFN_D3D12_CREATE_DEVICE                D3D12CreateDevice;
-	static PFN_D3D12_GET_DEBUG_INTERFACE          D3D12GetDebugInterface;
-	static PFN_D3D12_SERIALIZE_ROOT_SIGNATURE     D3D12SerializeRootSignature;
+	static BX_THREAD_LOCAL PFN_D3D12_ENABLE_EXPERIMENTAL_FEATURES D3D12EnableExperimentalFeatures;
+	static BX_THREAD_LOCAL PFN_D3D12_CREATE_DEVICE                D3D12CreateDevice;
+	static BX_THREAD_LOCAL  PFN_D3D12_GET_DEBUG_INTERFACE          D3D12GetDebugInterface;
+	static BX_THREAD_LOCAL  PFN_D3D12_SERIALIZE_ROOT_SIGNATURE     D3D12SerializeRootSignature;
 
 #	if !BX_PLATFORM_LINUX
 	typedef HANDLE  (WINAPI* PFN_CREATE_EVENT_EX_A)(LPSECURITY_ATTRIBUTES _attrs, LPCSTR _name, DWORD _flags, DWORD _access);
-	static PFN_CREATE_EVENT_EX_A CreateEventExA;
+	static BX_THREAD_LOCAL  PFN_CREATE_EVENT_EX_A CreateEventExA;
 #	endif // !BX_PLATFORM_LINUX
 #endif // USE_D3D12_DYNAMIC_LIB
 
@@ -710,7 +710,7 @@ namespace bgfx { namespace d3d12
 		void* destination;
 	};
 
-	static StubPIXEventsThreadInfo s_pixEventsThreadInfo = {};
+	static BX_THREAD_LOCAL  StubPIXEventsThreadInfo s_pixEventsThreadInfo = {};
 
 	static struct PIXEventsThreadInfo* WINAPI stubPIXGetThreadInfo()
 	{
@@ -6560,7 +6560,7 @@ namespace bgfx { namespace d3d12
 		RenderBind currentBind;
 		currentBind.clear();
 
-		static ViewState viewState;
+		static BX_THREAD_LOCAL  ViewState viewState;
 		viewState.reset(_render);
 
 // 		bool wireframe = !!(_render->m_debug&BGFX_DEBUG_WIREFRAME);
@@ -7367,17 +7367,17 @@ namespace bgfx { namespace d3d12
 		int64_t timeEnd   = bx::getHPCounter();
 		int64_t frameTime = timeEnd - timeBegin;
 
-		static int64_t min = frameTime;
-		static int64_t max = frameTime;
+		static BX_THREAD_LOCAL  int64_t min = frameTime;
+		static BX_THREAD_LOCAL  int64_t max = frameTime;
 		min = bx::min<int64_t>(min, frameTime);
 		max = bx::max<int64_t>(max, frameTime);
 
-		static uint32_t maxGpuLatency = 0;
-		static double   maxGpuElapsed = 0.0f;
+		static BX_THREAD_LOCAL  uint32_t maxGpuLatency = 0;
+		static BX_THREAD_LOCAL  double   maxGpuElapsed = 0.0f;
 		double elapsedGpuMs = 0.0;
 
-		static int64_t presentMin = m_presentElapsed;
-		static int64_t presentMax = m_presentElapsed;
+		static BX_THREAD_LOCAL  int64_t presentMin = m_presentElapsed;
+		static BX_THREAD_LOCAL  int64_t presentMax = m_presentElapsed;
 		presentMin = bx::min<int64_t>(presentMin, m_presentElapsed);
 		presentMax = bx::max<int64_t>(presentMax, m_presentElapsed);
 
@@ -7430,7 +7430,7 @@ namespace bgfx { namespace d3d12
 //			m_needPresent = true;
 			TextVideoMem& tvm = m_textVideoMem;
 
-			static int64_t next = timeEnd;
+			static BX_THREAD_LOCAL  int64_t next = timeEnd;
 
 			if (timeEnd >= next)
 			{
