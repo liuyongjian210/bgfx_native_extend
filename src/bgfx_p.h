@@ -5101,27 +5101,53 @@ namespace bgfx
 			return handle;
 		}
 
-		BGFX_API_FUNC(TextureHandle createTextureFromeSharedRes(uintptr_t nativeSharedRes))
+		BGFX_API_FUNC(TextureHandle createTextureFromeSharedRes(
+			  uintptr_t nativeSharedRes
+			, uint16_t width
+			, uint16_t height
+			, TextureFormat::Enum format
+			, uint64_t flags
+			))
 		{
 			BGFX_MUTEX_SCOPE(m_resourceApiLock);
 
 			TextureHandle handle = { m_textureHandle.alloc() };
 
 			TextureRef& ref = m_textureRef[handle.idx];
-			ref.init(
-				BackbufferRatio::Enum::Count
-				, uint16_t(1)
-				, uint16_t(1)
-				, uint16_t(1)
-				, TextureFormat::Enum::RGBA32F
-				, 0
-				, 0
-				, 0
-				, 0
-				, 0
-				, 0
-				, 0
-			);
+			if (width * height == 0)
+			{
+				ref.init(
+					BackbufferRatio::Enum::Count
+					, uint16_t(1)
+					, uint16_t(1)
+					, uint16_t(1)
+					, TextureFormat::Enum::RGBA32F
+					, 0
+					, 0
+					, 0
+					, 0
+					, 0
+					, 0
+					, 0
+				);
+			}
+			else
+			{
+				ref.init(
+					BackbufferRatio::Enum::Count
+					, width
+					, height
+					, uint16_t(1)
+					, format
+					, 0
+					, uint8_t(1)
+					, uint16_t(1)
+					, 0
+					, 0
+					, 0
+					, flags
+				);
+			}			
 
 			CommandBuffer& cmdbuf = getCommandBuffer(CommandBuffer::CreateTextureFromeSharedRes);
 			cmdbuf.write(handle);

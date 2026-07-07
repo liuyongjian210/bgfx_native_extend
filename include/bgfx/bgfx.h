@@ -2850,7 +2850,13 @@ namespace bgfx
 		, uint16_t _numLayers
 		, TextureFormat::Enum _format
 		);
-	TextureHandle createTextureFromeSharedRes(uintptr_t nativeSharedRes);
+	TextureHandle createTextureFromeSharedRes(
+		  uintptr_t nativeSharedRes
+		, uint16_t width = 1
+		, uint16_t height = 1
+		, TextureFormat::Enum format = TextureFormat::RGBA32F
+		, uint64_t flags = 0
+		);
 	void postFenceSignal(uintptr_t fence, uint32_t value);
 	void postSemaphore(const char* name, uint32_t value);
 	/// Create texture from memory buffer.

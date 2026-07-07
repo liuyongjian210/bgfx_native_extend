@@ -5088,9 +5088,15 @@ namespace bgfx
 		_height = bx::max<uint16_t>(1, _height);
 	}
 
-	TextureHandle createTextureFromeSharedRes(uintptr_t nativeSharedRes)
+	TextureHandle createTextureFromeSharedRes(
+		  uintptr_t nativeSharedRes
+		, uint16_t width
+		, uint16_t height
+		, TextureFormat::Enum format
+		, uint64_t flags
+		)
 	{
-		return s_ctx->createTextureFromeSharedRes(nativeSharedRes);
+		return s_ctx->createTextureFromeSharedRes(nativeSharedRes, width, height, format, flags);
 	}
 
 	void postFenceSignal(uintptr_t fence, uint32_t value)

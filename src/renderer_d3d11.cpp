@@ -4488,6 +4488,14 @@ namespace bgfx { namespace d3d11
 		D3D11_TEXTURE2D_DESC tex2d_desc;
 		tex2d->GetDesc(&tex2d_desc);
 		m_texture2d = tex2d;
+
+		m_flags     = BGFX_TEXTURE_NONE;
+		m_width     = tex2d_desc.Width;
+		m_height    = tex2d_desc.Height;
+		m_depth     = 1;
+		m_numLayers = tex2d_desc.ArraySize;
+		m_numMips   = tex2d_desc.MipLevels;
+		m_type      = Texture2D;
 		
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
 		bx::memSet(&srvd, 0, sizeof(srvd));
@@ -4516,6 +4524,14 @@ namespace bgfx { namespace d3d11
 
 		D3D11_TEXTURE2D_DESC tex2d_desc;
 		tex2d->GetDesc(&tex2d_desc);
+
+		m_flags     = BGFX_TEXTURE_NONE;
+		m_width     = tex2d_desc.Width;
+		m_height    = tex2d_desc.Height;
+		m_depth     = 1;
+		m_numLayers = tex2d_desc.ArraySize;
+		m_numMips   = tex2d_desc.MipLevels;
+		m_type      = Texture2D;
 
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
 		bx::memSet(&srvd, 0, sizeof(srvd));

@@ -287,6 +287,14 @@ namespace bgfx { namespace d3d11
 			, m_srv(NULL)
 			, m_uav(NULL)
 			, m_isSharedRes(false)
+			, m_flags(BGFX_TEXTURE_NONE)
+			, m_width(0)
+			, m_height(0)
+			, m_depth(0)
+			, m_numLayers(0)
+			, m_type(Texture2D)
+			, m_requestedFormat(0)
+			, m_textureFormat(0)
 			, m_numMips(0)
 		{
 		}
